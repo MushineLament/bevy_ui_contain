@@ -83,14 +83,15 @@ impl Node for UiPassNode {
         let diagnostics = render_context.diagnostic_recorder();
 
         // use the UI view entity if it is defined
-        let view_entity = if let Ok(ui_camera_view) = self
+        let camera_view_entity = if let Ok(ui_camera_view) = self
             .ui_camera_view_query
             .get_manual(world, input_view_entity)
         {
-            ui_camera_view.0
+            ui_camera_view.ui_camera
         } else {
             input_view_entity
         };
+
         let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
             label: Some("ui"),
             color_attachments: &[Some(target.get_unsampled_color_attachment())],
@@ -103,7 +104,20 @@ impl Node for UiPassNode {
         if let Some(viewport) = camera.viewport.as_ref() {
             render_pass.set_camera_viewport(viewport);
         }
-        if let Err(err) = transparent_phase.render(&mut render_pass, world, view_entity) {
+        if let Err(err) = transparent_phase.render(&mut render_pass, world, camera_view_entity) {
+            error!("Error encountered while rendering the ui phase {err:?}");
+        }
+
+        let contain_view_entity = if let Ok(ui_camera_view) = self
+            .ui_camera_view_query
+            .get_manual(world, input_view_entity)
+        {
+            ui_camera_view.ui_contain
+        } else {
+            input_view_entity
+        };
+        #[cfg(feature = "bevy_ui_contain")]
+        if let Err(err) = transparent_phase.render(&mut render_pass, world, contain_view_entity) {
             error!("Error encountered while rendering the ui phase {err:?}");
         }
 
