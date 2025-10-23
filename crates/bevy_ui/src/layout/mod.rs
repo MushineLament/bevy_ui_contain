@@ -1,3 +1,5 @@
+#[cfg(feature = "bevy_ui_contain")]
+use crate::UiContainTarget;
 use crate::{
     experimental::{UiChildren, UiRootNodes},
     ui_transform::{UiGlobalTransform, UiTransform},
@@ -69,6 +71,12 @@ pub enum LayoutError {
     TaffyError(taffy::TaffyError),
 }
 
+#[cfg(not(feature = "bevy_ui_contain"))]
+type IsContainFeature = ();
+
+#[cfg(feature = "bevy_ui_contain")]
+type IsContainFeature = Option<&'static UiContainTarget>;
+
 /// Updates the UI's layout tree, computes the new layout geometry and then updates the sizes and transforms of all the UI nodes.
 pub fn ui_layout_system(
     mut ui_surface: ResMut<UiSurface>,
@@ -90,16 +98,23 @@ pub fn ui_layout_system(
         Option<&BorderRadius>,
         Option<&Outline>,
         Option<&ScrollPosition>,
+        IsContainFeature,
     )>,
     mut buffer_query: Query<&mut ComputedTextBlock>,
     mut font_system: ResMut<CosmicFontSystem>,
     mut removed_children: RemovedComponents<Children>,
     mut removed_content_sizes: RemovedComponents<ContentSize>,
     mut removed_nodes: RemovedComponents<Node>,
+    mut ui_surface_query: Query<&mut UiSurface>,
+    contain_target_query: Query<&UiContainTarget>,
 ) {
     // When a `ContentSize` component is removed from an entity, we need to remove the measure from the corresponding taffy node.
     for entity in removed_content_sizes.read() {
         ui_surface.try_remove_node_context(entity);
+        #[cfg(feature = "bevy_ui_contain")]
+        ui_surface_query.iter_mut().for_each(|mut ui_surface| {
+            ui_surface.try_remove_node_context(entity);
+        });
     }
 
     // Sync Node and ContentSize to Taffy for all nodes
@@ -117,6 +132,23 @@ pub fn ui_layout_system(
                     computed_target.physical_size.as_vec2(),
                 );
                 let measure = content_size.and_then(|mut c| c.measure.take());
+
+                #[cfg(feature = "bevy_ui_contain")]
+                {
+                    if let Ok(target) = contain_target_query.get(entity) {
+                        let Ok(mut ui_surface) = ui_surface_query.get_mut(target.0) else {
+                            tracing::error!(
+                                "UiContainTarget pointing to an invalid UiContainSet Entity"
+                            );
+                            return;
+                        };
+                        ui_surface.upsert_node(&layout_context, entity, &node, measure);
+                    } else {
+                        ui_surface.upsert_node(&layout_context, entity, &node, measure);
+                    }
+                }
+
+                #[cfg(not(feature = "bevy_ui_contain"))]
                 ui_surface.upsert_node(&layout_context, entity, &node, measure);
             }
         });
@@ -124,6 +156,10 @@ pub fn ui_layout_system(
     // update and remove children
     for entity in removed_children.read() {
         ui_surface.try_remove_children(entity);
+        #[cfg(feature = "bevy_ui_contain")]
+        ui_surface_query.iter_mut().for_each(|mut ui_surface| {
+            ui_surface.try_remove_children(entity);
+        });
     }
 
     // clean up removed nodes after syncing children to avoid potential panic (invalid SlotMap key used)
@@ -132,6 +168,14 @@ pub fn ui_layout_system(
             .read()
             .filter(|entity| !node_query.contains(*entity)),
     );
+    #[cfg(feature = "bevy_ui_contain")]
+    ui_surface_query.iter_mut().for_each(|mut ui_surface| {
+        ui_surface.remove_entities(
+            removed_nodes
+                .read()
+                .filter(|entity| !node_query.contains(*entity)),
+        );
+    });
 
     for ui_root_entity in ui_root_node_query.iter() {
         fn update_children_recursively(
@@ -154,13 +198,24 @@ pub fn ui_layout_system(
                 update_children_recursively(ui_surface, ui_children, added_node_query, child);
             }
         }
+        #[cfg(feature = "bevy_ui_contain")]
+        let ui_surface = {
+            if let Ok(target) = contain_target_query.get(ui_root_entity) {
+                let Ok(ui_surface) = ui_surface_query.get_mut(target.0) else {
+                    tracing::error!("UiContainTarget pointing to an invalid UiContainSet Entity");
+                    continue;
+                };
 
-        update_children_recursively(
-            &mut ui_surface,
-            &ui_children,
-            &added_node_query,
-            ui_root_entity,
-        );
+                ui_surface.into_inner()
+            } else {
+                &mut ui_surface
+            }
+        };
+
+        #[cfg(not(feature = "bevy_ui_contain"))]
+        let ui_surface = &mut ui_surface;
+
+        update_children_recursively(ui_surface, &ui_children, &added_node_query, ui_root_entity);
 
         let (_, _, _, computed_target) = node_query.get(ui_root_entity).unwrap();
 
@@ -173,7 +228,7 @@ pub fn ui_layout_system(
 
         update_uinode_geometry_recursive(
             ui_root_entity,
-            &mut ui_surface,
+            ui_surface,
             true,
             computed_target.physical_size().as_vec2(),
             Affine2::IDENTITY,
@@ -201,6 +256,7 @@ pub fn ui_layout_system(
             Option<&BorderRadius>,
             Option<&Outline>,
             Option<&ScrollPosition>,
+            IsContainFeature,
         )>,
         ui_children: &UiChildren,
         inverse_target_scale_factor: f32,
@@ -216,6 +272,7 @@ pub fn ui_layout_system(
             maybe_border_radius,
             maybe_outline,
             maybe_scroll_position,
+            _,
         )) = node_update_query.get_mut(entity)
         {
             let use_rounding = maybe_layout_config

@@ -4,7 +4,9 @@ use bevy_platform::collections::hash_map::Entry;
 use taffy::TaffyTree;
 
 use bevy_ecs::{
-    component::Component, entity::{Entity, EntityHashMap}, prelude::Resource
+    component::Component,
+    entity::{Entity, EntityHashMap},
+    prelude::Resource,
 };
 use bevy_math::{UVec2, Vec2};
 use bevy_utils::default;
@@ -29,7 +31,7 @@ impl From<taffy::NodeId> for LayoutNode {
     }
 }
 
-#[derive(Resource,Component)]
+#[derive(Resource, Component)]
 pub struct UiSurface {
     pub root_entity_to_viewport_node: EntityHashMap<taffy::NodeId>,
     pub(super) entity_to_taffy: EntityHashMap<LayoutNode>,

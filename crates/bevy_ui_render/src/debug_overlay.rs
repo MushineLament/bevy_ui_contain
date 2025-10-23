@@ -4,11 +4,14 @@ use super::ExtractedUiNodes;
 use super::NodeType;
 use super::UiCameraMap;
 use crate::shader_flags;
+use crate::IsContainFeature;
 use bevy_asset::AssetId;
 use bevy_camera::visibility::InheritedVisibility;
 use bevy_color::Hsla;
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::ReflectResource;
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_ecs::query::With;
 use bevy_ecs::resource::Resource;
 use bevy_ecs::system::Commands;
 use bevy_ecs::system::Query;
@@ -20,10 +23,14 @@ use bevy_reflect::Reflect;
 use bevy_render::sync_world::TemporaryRenderEntity;
 use bevy_render::Extract;
 use bevy_sprite::BorderRect;
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_transform::components::GlobalTransform;
 use bevy_ui::ui_transform::UiGlobalTransform;
 use bevy_ui::CalculatedClip;
 use bevy_ui::ComputedNode;
 use bevy_ui::ComputedUiTargetCamera;
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_ui::UiContainSet;
 use bevy_ui::UiStack;
 
 /// Configuration for the UI debug overlay
@@ -69,10 +76,14 @@ pub fn extract_debug_overlay(
             &InheritedVisibility,
             Option<&CalculatedClip>,
             &ComputedUiTargetCamera,
+            IsContainFeature,
         )>,
     >,
     ui_stack: Extract<Res<UiStack>>,
     camera_map: Extract<UiCameraMap>,
+    #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Extract<
+        Query<&GlobalTransform, With<UiContainSet>>,
+    >,
 ) {
     if !debug_options.enabled {
         return;
@@ -80,7 +91,9 @@ pub fn extract_debug_overlay(
 
     let mut camera_mapper = camera_map.get_mapper();
 
-    for (entity, uinode, transform, visibility, maybe_clip, computed_target) in &uinode_query {
+    for (entity, uinode, transform, visibility, maybe_clip, computed_target, _is_contain_target) in
+        &uinode_query
+    {
         if !debug_options.show_hidden && !visibility.get() {
             continue;
         }
@@ -88,6 +101,27 @@ pub fn extract_debug_overlay(
         let Some(extracted_camera_entity) = camera_mapper.map(computed_target) else {
             continue;
         };
+
+        #[cfg(feature = "bevy_ui_contain")]
+        let transform = {
+            let transform = match _is_contain_target {
+                Some(target) => ui_contain_query.get(target.0).map(|global| {
+                    use bevy_math::{Affine2, Vec2Swizzles, Vec3Swizzles};
+
+                    let affine3 = global.translation().xy() + transform.translation.xy();
+
+                    Affine2::from_translation(affine3)
+                }),
+                None => Ok(transform.affine()),
+            };
+            let Ok(transform) = transform else {
+                continue;
+            };
+            transform
+        };
+
+        #[cfg(not(feature = "bevy_ui_contain"))]
+        let transform: Affine2 = transform.into();
 
         // Extract a border box to display an outline for every UI Node in the layout
         extracted_uinodes.uinodes.push(ExtractedUiNode {
@@ -99,7 +133,7 @@ pub fn extract_debug_overlay(
                 .map(|clip| clip.clip),
             image: AssetId::default(),
             extracted_camera_entity,
-            transform: transform.into(),
+            transform,
             item: ExtractedUiItem::Node {
                 color: Hsla::sequential_dispersed(entity.index()).into(),
                 rect: Rect {
@@ -114,6 +148,7 @@ pub fn extract_debug_overlay(
                 node_type: NodeType::Border(shader_flags::BORDER_ALL),
             },
             main_entity: entity.into(),
+            is_contain_target: _is_contain_target.is_some(),
         });
     }
 }

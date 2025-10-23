@@ -6,6 +6,8 @@ use crate::{
     CalculatedClip, ComputedUiRenderTargetInfo, ComputedUiTargetCamera, DefaultUiCamera, Display,
     Node, OverflowAxis, OverrideClip, UiScale, UiTargetCamera,
 };
+#[cfg(feature = "bevy_ui_contain")]
+use crate::{UiContainOverflow, UiContainSet, UiContainTarget};
 
 use super::ComputedNode;
 use bevy_app::Propagate;
@@ -17,6 +19,14 @@ use bevy_ecs::{
 };
 use bevy_math::{Rect, UVec2};
 use bevy_sprite::BorderRect;
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_transform::components::GlobalTransform;
+
+#[cfg(not(feature = "bevy_ui_contain"))]
+type IsContainFeature = ();
+
+#[cfg(feature = "bevy_ui_contain")]
+type IsContainFeature = Option<&'static UiContainTarget>;
 
 /// Updates clipping for all nodes
 pub fn update_clipping_system(
@@ -28,16 +38,54 @@ pub fn update_clipping_system(
         &UiGlobalTransform,
         Option<&mut CalculatedClip>,
         Has<OverrideClip>,
+        IsContainFeature,
     )>,
     ui_children: UiChildren,
+    #[cfg(feature = "bevy_ui_contain")] ui_contian_target_query: Query<&UiContainTarget>,
+    #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Query<(
+        &UiContainSet,
+        &UiContainOverflow,
+        &GlobalTransform,
+    )>,
 ) {
     for root_node in root_nodes.iter() {
+        #[cfg(feature = "bevy_ui_contain")]
+        let rect = if let Ok(target) = ui_contian_target_query.get(root_node) {
+            use bevy_math::Vec3Swizzles;
+
+            let Ok((set, overflow, global)) = ui_contain_query.get(target.0) else {
+                continue;
+            };
+
+            // let mut clip_rect = Rect::from_center_size(global.translation().xy(), set.size());
+
+            let mut clip_rect = Rect::from_corners(
+                global.translation().xy(),
+                global.translation().xy() + set.size(),
+            );
+
+            if overflow.x == OverflowAxis::Visible {
+                clip_rect.min.x = -f32::INFINITY;
+                clip_rect.max.x = f32::INFINITY;
+            }
+            if overflow.y == OverflowAxis::Visible {
+                clip_rect.min.y = -f32::INFINITY;
+                clip_rect.max.y = f32::INFINITY;
+            }
+            Some(clip_rect)
+        } else {
+            None
+        };
+
+        #[cfg(not(feature = "bevy_ui_contain"))]
+        let rect = None;
+
         update_clipping(
             &mut commands,
             &ui_children,
             &mut node_query,
             root_node,
-            None,
+            rect,
         );
     }
 }
@@ -51,11 +99,12 @@ fn update_clipping(
         &UiGlobalTransform,
         Option<&mut CalculatedClip>,
         Has<OverrideClip>,
+        IsContainFeature,
     )>,
     entity: Entity,
     mut maybe_inherited_clip: Option<Rect>,
 ) {
-    let Ok((node, computed_node, transform, maybe_calculated_clip, has_override_clip)) =
+    let Ok((node, computed_node, transform, maybe_calculated_clip, has_override_clip, _)) =
         node_query.get_mut(entity)
     else {
         return;
@@ -140,6 +189,8 @@ pub fn propagate_ui_target_cameras(
     camera_query: Query<&Camera>,
     target_camera_query: Query<&UiTargetCamera>,
     ui_root_nodes: UiRootNodes,
+    #[cfg(feature = "bevy_ui_contain")] ui_contian_target_query: Query<&UiContainTarget>,
+    #[cfg(feature = "bevy_ui_contain")] ui_surface_query: Query<&UiContainSet>,
 ) {
     let default_camera_entity = default_ui_camera.get();
 
@@ -151,10 +202,31 @@ pub fn propagate_ui_target_cameras(
             .or(default_camera_entity)
             .unwrap_or(Entity::PLACEHOLDER);
 
+        #[cfg(feature = "bevy_ui_contain")]
+        let (scale_factor, physical_size) =
+            if let Ok(target) = ui_contian_target_query.get(root_entity) {
+                ui_surface_query
+                    .get(target.0)
+                    .map(|ui_contain| (ui_contain.scale_factor, ui_contain.physical_size))
+                    .unwrap_or((1., UVec2::ZERO))
+            } else {
+                camera_query
+                    .get(camera)
+                    .ok()
+                    .map(|camera| {
+                        (
+                            camera.target_scaling_factor().unwrap_or(1.) * ui_scale.0,
+                            camera.physical_viewport_size().unwrap_or(UVec2::ZERO),
+                        )
+                    })
+                    .unwrap_or((1., UVec2::ZERO))
+            };
+
         commands
             .entity(root_entity)
             .try_insert(Propagate(ComputedUiTargetCamera { camera }));
 
+        #[cfg(not(feature = "bevy_ui_contain"))]
         let (scale_factor, physical_size) = camera_query
             .get(camera)
             .ok()

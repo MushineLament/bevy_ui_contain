@@ -354,9 +354,13 @@ pub fn extract_gradients(
             &InheritedVisibility,
             Option<&CalculatedClip>,
             AnyOf<(&BackgroundGradient, &BorderGradient)>,
+            IsContainFeature,
         )>,
     >,
     camera_map: Extract<UiCameraMap>,
+    #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Extract<
+        Query<&GlobalTransform, With<UiContainSet>>,
+    >,
 ) {
     let mut camera_mapper = camera_map.get_mapper();
     let mut sorted_stops = vec![];
@@ -370,6 +374,7 @@ pub fn extract_gradients(
         inherited_visibility,
         clip,
         (gradient, gradient_border),
+        _is_contain_target,
     ) in &gradients_query
     {
         // Skip invisible images
@@ -380,6 +385,27 @@ pub fn extract_gradients(
         let Some(extracted_camera_entity) = camera_mapper.map(camera) else {
             continue;
         };
+
+        #[cfg(feature = "bevy_ui_contain")]
+        let transform = {
+            let transform = match _is_contain_target {
+                Some(target) => ui_contain_query.get(target.0).map(|global| {
+                    use bevy_math::{Affine2, Vec2Swizzles, Vec3Swizzles};
+
+                    let affine3 = global.translation().xy() + transform.translation.xy();
+
+                    Affine2::from_translation(affine3)
+                }),
+                None => Ok(transform.affine()),
+            };
+            let Ok(transform) = transform else {
+                continue;
+            };
+            transform
+        };
+
+        #[cfg(not(feature = "bevy_ui_contain"))]
+        let transform: Affine2 = transform.into();
 
         for (gradients, node_type) in [
             (gradient.map(|g| &g.0), NodeType::Rect),
@@ -403,7 +429,7 @@ pub fn extract_gradients(
                         image: AssetId::default(),
                         clip: clip.map(|clip| clip.clip),
                         extracted_camera_entity,
-                        transform: transform.into(),
+                        transform,
                         item: ExtractedUiItem::Node {
                             color: color.into(),
                             rect: Rect {
@@ -419,6 +445,7 @@ pub fn extract_gradients(
                         },
                         main_entity: entity.into(),
                         render_entity: commands.spawn(TemporaryRenderEntity).id(),
+                        is_contain_target: _is_contain_target.is_some(),
                     });
                     continue;
                 }

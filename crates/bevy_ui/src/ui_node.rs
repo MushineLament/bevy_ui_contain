@@ -2878,7 +2878,8 @@ pub struct UiContains(Vec<Entity>);
 #[require(
     crate::ui_surface::UiSurface,
     bevy_transform::components::Transform,
-    UiContains
+    UiContains,
+    UiContainOverflow
 )]
 pub struct UiContainSet {
     /// The scale factor of the target contain's render target.
@@ -2886,6 +2887,16 @@ pub struct UiContainSet {
     /// The size of the target contain's viewport in physical pixels.
     pub physical_size: UVec2,
 }
+
+impl UiContainSet {
+    pub fn size(&self) -> Vec2 {
+        self.physical_size.as_vec2() * self.scale_factor
+    }
+}
+
+#[derive(Component, Clone, Copy, Debug, Reflect, PartialEq, Default, Deref, DerefMut)]
+#[reflect(Component, PartialEq, Clone)]
+pub struct UiContainOverflow(pub Overflow);
 
 #[cfg(test)]
 mod tests {
