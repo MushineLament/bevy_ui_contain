@@ -532,6 +532,7 @@ pub fn extract_uinode_background_colors(
                 node_type: NodeType::Rect,
             },
             main_entity: entity.into(),
+            #[cfg(feature = "bevy_ui_contain")]
             is_contain_target: _is_contain_target.is_some(),
         });
     }
@@ -652,6 +653,7 @@ pub fn extract_uinode_images(
                 node_type: NodeType::Rect,
             },
             main_entity: entity.into(),
+            #[cfg(feature = "bevy_ui_contain")]
             is_contain_target: _is_contain_target.is_some(),
         });
     }
@@ -781,6 +783,7 @@ pub fn extract_uinode_borders(
                     },
                     main_entity: entity.into(),
                     render_entity: commands.spawn(TemporaryRenderEntity).id(),
+                    #[cfg(feature = "bevy_ui_contain")]
                     is_contain_target: _is_contain_target.is_some(),
                 });
             }
@@ -814,6 +817,7 @@ pub fn extract_uinode_borders(
                     node_type: NodeType::Border(shader_flags::BORDER_ALL),
                 },
                 main_entity: entity.into(),
+                #[cfg(feature = "bevy_ui_contain")]
                 is_contain_target: _is_contain_target.is_some(),
             });
         }
@@ -1095,6 +1099,7 @@ pub fn extract_viewport_nodes(
                 node_type: NodeType::Rect,
             },
             main_entity: entity.into(),
+            #[cfg(feature = "bevy_ui_contain")]
             is_contain_target: _is_contain_target.is_some(),
         });
     }
@@ -1224,6 +1229,7 @@ pub fn extract_text_sections(
                     item: ExtractedUiItem::Glyphs { range: start..end },
                     main_entity: entity.into(),
                     transform,
+                    #[cfg(feature = "bevy_ui_contain")]
                     is_contain_target: _is_contain_target.is_some(),
                 });
                 start = end;
@@ -1344,6 +1350,7 @@ pub fn extract_text_shadows(
                     extracted_camera_entity,
                     item: ExtractedUiItem::Glyphs { range: start..end },
                     main_entity: entity.into(),
+                    #[cfg(feature = "bevy_ui_contain")]
                     is_contain_target: _is_contain_target.is_some(),
                 });
                 start = end;
@@ -1385,6 +1392,7 @@ pub fn extract_text_shadows(
                     node_type: NodeType::Rect,
                 },
                 main_entity: entity.into(),
+                #[cfg(feature = "bevy_ui_contain")]
                 is_contain_target: _is_contain_target.is_some(),
             });
         }
@@ -1493,6 +1501,7 @@ pub fn extract_text_decorations(
                         node_type: NodeType::Rect,
                     },
                     main_entity: entity.into(),
+                    #[cfg(feature = "bevy_ui_contain")]
                     is_contain_target: _is_contain_target.is_some(),
                 });
             }
@@ -1523,6 +1532,7 @@ pub fn extract_text_decorations(
                         node_type: NodeType::Rect,
                     },
                     main_entity: entity.into(),
+                    #[cfg(feature = "bevy_ui_contain")]
                     is_contain_target: _is_contain_target.is_some(),
                 });
             }

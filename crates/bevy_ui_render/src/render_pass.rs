@@ -107,7 +107,8 @@ impl Node for UiPassNode {
         if let Err(err) = transparent_phase.render(&mut render_pass, world, camera_view_entity) {
             error!("Error encountered while rendering the ui phase {err:?}");
         }
-
+        
+        #[cfg(feature = "bevy_ui_contain")]
         let contain_view_entity = if let Ok(ui_camera_view) = self
             .ui_camera_view_query
             .get_manual(world, input_view_entity)

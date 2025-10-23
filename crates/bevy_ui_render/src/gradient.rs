@@ -445,6 +445,7 @@ pub fn extract_gradients(
                         },
                         main_entity: entity.into(),
                         render_entity: commands.spawn(TemporaryRenderEntity).id(),
+                        #[cfg(feature = "bevy_ui_contain")]
                         is_contain_target: _is_contain_target.is_some(),
                     });
                     continue;
@@ -471,7 +472,7 @@ pub fn extract_gradients(
                         extracted_gradients.items.push(ExtractedGradient {
                             render_entity: commands.spawn(TemporaryRenderEntity).id(),
                             stack_index: uinode.stack_index,
-                            transform: transform.into(),
+                            transform,
                             stops_range: range_start..extracted_color_stops.0.len(),
                             rect: Rect {
                                 min: Vec2::ZERO,
@@ -521,7 +522,7 @@ pub fn extract_gradients(
                         extracted_gradients.items.push(ExtractedGradient {
                             render_entity: commands.spawn(TemporaryRenderEntity).id(),
                             stack_index: uinode.stack_index,
-                            transform: transform.into(),
+                            transform,
                             stops_range: range_start..extracted_color_stops.0.len(),
                             rect: Rect {
                                 min: Vec2::ZERO,
@@ -577,7 +578,7 @@ pub fn extract_gradients(
                         extracted_gradients.items.push(ExtractedGradient {
                             render_entity: commands.spawn(TemporaryRenderEntity).id(),
                             stack_index: uinode.stack_index,
-                            transform: transform.into(),
+                            transform,
                             stops_range: range_start..extracted_color_stops.0.len(),
                             rect: Rect {
                                 min: Vec2::ZERO,

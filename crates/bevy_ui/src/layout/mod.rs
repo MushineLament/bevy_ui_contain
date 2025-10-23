@@ -105,8 +105,8 @@ pub fn ui_layout_system(
     mut removed_children: RemovedComponents<Children>,
     mut removed_content_sizes: RemovedComponents<ContentSize>,
     mut removed_nodes: RemovedComponents<Node>,
-    mut ui_surface_query: Query<&mut UiSurface>,
-    contain_target_query: Query<&UiContainTarget>,
+    #[cfg(feature = "bevy_ui_contain")] mut ui_surface_query: Query<&mut UiSurface>,
+    #[cfg(feature = "bevy_ui_contain")] contain_target_query: Query<&UiContainTarget>,
 ) {
     // When a `ContentSize` component is removed from an entity, we need to remove the measure from the corresponding taffy node.
     for entity in removed_content_sizes.read() {
