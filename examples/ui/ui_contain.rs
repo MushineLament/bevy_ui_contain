@@ -21,6 +21,7 @@ fn setup(mut commands: Commands) {
                 physical_size: UVec2::new(500, 500),
             },
             UiContainOverflow(Overflow::clip()),
+            Anchor::CENTER
             // Sprite{
             //     custom_size : Some(Vec2::new(600.0,600.0)),
             //     ..Default::default()
@@ -63,43 +64,43 @@ fn setup(mut commands: Commands) {
             ));
         });
 
-    // commands
-    //     .spawn((
-    //         Node {
-    //             width: percent(20.0),
-    //             height: percent(20.0),
-    //             right: px(0.0),
-    //             border: px(4.0).all(),
-    //             ..Default::default()
-    //         },
-    //         BorderColor {
-    //             top: Srgba::BLUE.into(),
-    //             right: Srgba::GREEN.into(),
-    //             bottom: Srgba::RED.into(),
-    //             left: Srgba::WHITE.into(),
-    //         },
-    //         // Propagate(UiContainTarget(uicontain)),
-    //     ))
-    //     .with_children(|parent| {
-    //         parent
-    //             .spawn((
-    //                 Node {
-    //                     width: px(150.0),
-    //                     height: px(150.0),
-    //                     border: px(4.0).all(),
-    //                     justify_self: JustifySelf::Center,
-    //                     ..Default::default()
-    //                 },
-    //                 BorderColor {
-    //                     top: Srgba::BLUE.into(),
-    //                     right: Srgba::GREEN.into(),
-    //                     bottom: Srgba::RED.into(),
-    //                     left: Srgba::WHITE.into(),
-    //                 },
-    //                 Text::new("node text"),
-    //             ))
-    //             .with_child((Text::new("node text"),));
-    //     });
+    commands
+        .spawn((
+            Node {
+                width: percent(20.0),
+                height: percent(20.0),
+                right: px(0.0),
+                border: px(4.0).all(),
+                ..Default::default()
+            },
+            BorderColor {
+                top: Srgba::BLUE.into(),
+                right: Srgba::GREEN.into(),
+                bottom: Srgba::RED.into(),
+                left: Srgba::WHITE.into(),
+            },
+            // Propagate(UiContainTarget(uicontain)),
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn((
+                    Node {
+                        width: px(150.0),
+                        height: px(150.0),
+                        border: px(4.0).all(),
+                        justify_self: JustifySelf::Center,
+                        ..Default::default()
+                    },
+                    BorderColor {
+                        top: Srgba::BLUE.into(),
+                        right: Srgba::GREEN.into(),
+                        bottom: Srgba::RED.into(),
+                        left: Srgba::WHITE.into(),
+                    },
+                    Text::new("node text"),
+                ))
+                .with_child((Text::new("node text"),));
+        });
 
     // commands.spawn((
     //     Text2d::new("sprite"),

@@ -18,6 +18,8 @@ use bevy_ecs::{
     system::{Commands, Query, Res},
 };
 use bevy_math::{Rect, UVec2};
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_sprite::Anchor;
 use bevy_sprite::BorderRect;
 #[cfg(feature = "bevy_ui_contain")]
 use bevy_transform::components::GlobalTransform;
@@ -45,6 +47,7 @@ pub fn update_clipping_system(
     #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Query<(
         &UiContainSet,
         &UiContainOverflow,
+        &Anchor,
         &GlobalTransform,
     )>,
 ) {
@@ -53,16 +56,16 @@ pub fn update_clipping_system(
         let rect = if let Ok(target) = ui_contian_target_query.get(root_node) {
             use bevy_math::Vec3Swizzles;
 
-            let Ok((set, overflow, global)) = ui_contain_query.get(target.0) else {
+            let Ok((contain, overflow, anchor, global)) = ui_contain_query.get(target.0) else {
                 continue;
             };
 
             // let mut clip_rect = Rect::from_center_size(global.translation().xy(), set.size());
 
-            let mut clip_rect = Rect::from_corners(
-                global.translation().xy(),
-                global.translation().xy() + set.size(),
-            );
+            let global = global.translation().xy()
+                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
+
+            let mut clip_rect = Rect::from_corners(global, global + contain.size());
 
             if overflow.x == OverflowAxis::Visible {
                 clip_rect.min.x = -f32::INFINITY;
@@ -72,6 +75,7 @@ pub fn update_clipping_system(
                 clip_rect.min.y = -f32::INFINITY;
                 clip_rect.max.y = f32::INFINITY;
             }
+
             Some(clip_rect)
         } else {
             None

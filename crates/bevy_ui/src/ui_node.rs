@@ -2878,6 +2878,7 @@ pub struct UiContains(Vec<Entity>);
 #[require(
     crate::ui_surface::UiSurface,
     bevy_transform::components::Transform,
+    bevy_sprite::Anchor,
     UiContains,
     UiContainOverflow
 )]

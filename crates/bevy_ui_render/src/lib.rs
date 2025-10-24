@@ -25,6 +25,8 @@ use bevy_reflect::Reflect;
 #[cfg(feature = "bevy_ui_contain")]
 use bevy_render::view::ColorGrading;
 use bevy_shader::load_shader_library;
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_sprite::Anchor;
 use bevy_sprite_render::SpriteAssetEvents;
 use bevy_ui::widget::{ImageNode, TextShadow, ViewportNode};
 use bevy_ui::{
@@ -462,7 +464,7 @@ pub fn extract_uinode_background_colors(
     >,
     camera_map: Extract<UiCameraMap>,
     #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Extract<
-        Query<&GlobalTransform, With<UiContainSet>>,
+        Query<(&GlobalTransform, &Anchor, &UiContainSet)>,
     >,
 ) {
     let mut camera_mapper = camera_map.get_mapper();
@@ -493,13 +495,18 @@ pub fn extract_uinode_background_colors(
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query.get(target.0).map(|global| {
-                    use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => ui_contain_query
+                    .get(target.0)
+                    .map(|(global, anchor, contain)| {
+                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
 
-                    let affine3 = global.translation().xy() + transform.translation.xy();
+                        let global = global.translation().xy()
+                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
 
-                    Affine2::from_translation(affine3)
-                }),
+                        let affine3 = global + transform.translation.xy();
+
+                        Affine2::from_translation(affine3)
+                    }),
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -556,7 +563,7 @@ pub fn extract_uinode_images(
     >,
     camera_map: Extract<UiCameraMap>,
     #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Extract<
-        Query<&GlobalTransform, With<UiContainSet>>,
+        Query<(&GlobalTransform, &Anchor, &UiContainSet)>,
     >,
 ) {
     let mut camera_mapper = camera_map.get_mapper();
@@ -617,13 +624,18 @@ pub fn extract_uinode_images(
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query.get(target.0).map(|global| {
-                    use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => ui_contain_query
+                    .get(target.0)
+                    .map(|(global, anchor, contain)| {
+                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
 
-                    let affine3 = global.translation().xy() + transform.translation.xy();
+                        let global = global.translation().xy()
+                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
 
-                    Affine2::from_translation(affine3)
-                }),
+                        let affine3 = global + transform.translation.xy();
+
+                        Affine2::from_translation(affine3)
+                    }),
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -677,7 +689,7 @@ pub fn extract_uinode_borders(
     >,
     camera_map: Extract<UiCameraMap>,
     #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Extract<
-        Query<&GlobalTransform, With<UiContainSet>>,
+        Query<(&GlobalTransform, &Anchor, &UiContainSet), With<UiContainSet>>,
     >,
 ) {
     let image = AssetId::<Image>::default();
@@ -698,13 +710,18 @@ pub fn extract_uinode_borders(
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query.get(target.0).map(|global| {
-                    use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => ui_contain_query
+                    .get(target.0)
+                    .map(|(global, anchor, contain)| {
+                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
 
-                    let affine3 = global.translation().xy() + transform.translation.xy();
+                        let global = global.translation().xy()
+                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
 
-                    Affine2::from_translation(affine3)
-                }),
+                        let affine3 = global + transform.translation.xy();
+
+                        Affine2::from_translation(affine3)
+                    }),
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -1025,7 +1042,7 @@ pub fn extract_viewport_nodes(
     >,
     camera_map: Extract<UiCameraMap>,
     #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Extract<
-        Query<&GlobalTransform, With<UiContainSet>>,
+        Query<(&GlobalTransform, &Anchor, &UiContainSet)>,
     >,
 ) {
     let mut camera_mapper = camera_map.get_mapper();
@@ -1060,13 +1077,18 @@ pub fn extract_viewport_nodes(
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query.get(target.0).map(|global| {
-                    use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => ui_contain_query
+                    .get(target.0)
+                    .map(|(global, anchor, contain)| {
+                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
 
-                    let affine3 = global.translation().xy() + transform.translation.xy();
+                        let global = global.translation().xy()
+                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
 
-                    Affine2::from_translation(affine3)
-                }),
+                        let affine3 = global + transform.translation.xy();
+
+                        Affine2::from_translation(affine3)
+                    }),
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -1126,7 +1148,7 @@ pub fn extract_text_sections(
     text_styles: Extract<Query<&TextColor>>,
     camera_map: Extract<UiCameraMap>,
     #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Extract<
-        Query<&GlobalTransform, With<UiContainSet>>,
+        Query<(&GlobalTransform, &Anchor, &UiContainSet)>,
     >,
 ) {
     let mut start = extracted_uinodes.glyphs.len();
@@ -1158,14 +1180,19 @@ pub fn extract_text_sections(
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query.get(target.0).map(|global| {
-                    use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => ui_contain_query
+                    .get(target.0)
+                    .map(|(global, anchor, contain)| {
+                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
 
-                    let affine3 = global.translation().xy() + transform.translation.xy();
+                        let global = global.translation().xy()
+                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
 
-                    Affine2::from_translation(affine3)
-                        * Affine2::from_translation(-0.5 * uinode.size())
-                }),
+                        let affine3 = global + transform.translation.xy();
+
+                        Affine2::from_translation(affine3)
+                            * Affine2::from_translation(-0.5 * uinode.size())
+                    }),
                 None => {
                     Ok(Affine2::from(*transform) * Affine2::from_translation(-0.5 * uinode.size()))
                 }
@@ -1261,7 +1288,7 @@ pub fn extract_text_shadows(
     text_decoration_query: Extract<Query<&Strikethrough>>,
     camera_map: Extract<UiCameraMap>,
     #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Extract<
-        Query<&GlobalTransform, With<UiContainSet>>,
+        Query<(&GlobalTransform, &Anchor, &UiContainSet)>,
     >,
 ) {
     let mut start = extracted_uinodes.glyphs.len();
@@ -1293,16 +1320,22 @@ pub fn extract_text_shadows(
         #[cfg(feature = "bevy_ui_contain")]
         let node_transform = {
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query.get(target.0).map(|global| {
-                    use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => ui_contain_query
+                    .get(target.0)
+                    .map(|(global, anchor, contain)| {
+                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
 
-                    let affine3 = global.translation().xy() + transform.translation.xy();
+                        let global = global.translation().xy()
+                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
 
-                    Affine2::from_translation(affine3)
-                        * Affine2::from_translation(
-                            -0.5 * uinode.size() + shadow.offset / uinode.inverse_scale_factor(),
-                        )
-                }),
+                        let affine3 = global + transform.translation.xy();
+
+                        Affine2::from_translation(affine3)
+                            * Affine2::from_translation(
+                                -0.5 * uinode.size()
+                                    + shadow.offset / uinode.inverse_scale_factor(),
+                            )
+                    }),
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -1420,7 +1453,7 @@ pub fn extract_text_decorations(
     >,
     camera_map: Extract<UiCameraMap>,
     #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Extract<
-        Query<&GlobalTransform, With<UiContainSet>>,
+        Query<(&GlobalTransform, &Anchor, &UiContainSet)>,
     >,
 ) {
     let mut camera_mapper = camera_map.get_mapper();
@@ -1448,14 +1481,19 @@ pub fn extract_text_decorations(
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query.get(target.0).map(|global| {
-                    use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => ui_contain_query
+                    .get(target.0)
+                    .map(|(global, anchor, contain)| {
+                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
 
-                    let affine3 = global.translation().xy() + global_transform.translation.xy();
+                        let global = global.translation().xy()
+                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
 
-                    Affine2::from_translation(affine3)
-                        * Affine2::from_translation(-0.5 * uinode.size())
-                }),
+                        let affine3 = global + global_transform.translation.xy();
+
+                        Affine2::from_translation(affine3)
+                            * Affine2::from_translation(-0.5 * uinode.size())
+                    }),
                 None => Ok(Affine2::from(global_transform)
                     * Affine2::from_translation(-0.5 * uinode.size())),
             };
