@@ -80,6 +80,10 @@ pub use render_pass::*;
 pub use ui_material_pipeline::*;
 use ui_texture_slice_pipeline::UiTextureSlicerPlugin;
 
+use std::f32::consts::PI;
+
+use bevy_math::{Mat2, Vec2Swizzles, Vec3Swizzles};
+
 pub mod graph {
     use bevy_render::render_graph::{RenderLabel, RenderSubGraph};
 
@@ -494,19 +498,25 @@ pub fn extract_uinode_background_colors(
 
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
+            // Convert UiTransform and Transform 2D coordinate system
+            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query
-                    .get(target.0)
-                    .map(|(global, anchor, contain)| {
-                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => {
+                    ui_contain_query
+                        .get(target.0)
+                        .map(|(pos_contain, anchor, contain)| {
+                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
+                            let pos_ui_start = pos_contain.translation().xy()
+                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
+                                    * contain.size());
 
-                        let global = global.translation().xy()
-                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
+                            let pos_ui = pos_ui_start + transform.translation.xy();
+                            let transform = flip_y.transform_vector2(pos_ui);
 
-                        let affine3 = global + transform.translation.xy();
-
-                        Affine2::from_translation(affine3)
-                    }),
+                            Affine2::from_translation(transform)
+                        })
+                }
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -623,19 +633,25 @@ pub fn extract_uinode_images(
 
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
+            // Convert UiTransform and Transform 2D coordinate system
+            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query
-                    .get(target.0)
-                    .map(|(global, anchor, contain)| {
-                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => {
+                    ui_contain_query
+                        .get(target.0)
+                        .map(|(pos_contain, anchor, contain)| {
+                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
+                            let pos_ui_start = pos_contain.translation().xy()
+                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
+                                    * contain.size());
 
-                        let global = global.translation().xy()
-                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
+                            let pos_ui = pos_ui_start + transform.translation.xy();
+                            let transform = flip_y.transform_vector2(pos_ui);
 
-                        let affine3 = global + transform.translation.xy();
-
-                        Affine2::from_translation(affine3)
-                    }),
+                            Affine2::from_translation(transform)
+                        })
+                }
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -709,19 +725,25 @@ pub fn extract_uinode_borders(
     {
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
+            // Convert UiTransform and Transform 2D coordinate system
+            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query
-                    .get(target.0)
-                    .map(|(global, anchor, contain)| {
-                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => {
+                    ui_contain_query
+                        .get(target.0)
+                        .map(|(pos_contain, anchor, contain)| {
+                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
+                            let pos_ui_start = pos_contain.translation().xy()
+                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
+                                    * contain.size());
 
-                        let global = global.translation().xy()
-                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
+                            let pos_ui = pos_ui_start + transform.translation.xy();
+                            let transform = flip_y.transform_vector2(pos_ui);
 
-                        let affine3 = global + transform.translation.xy();
-
-                        Affine2::from_translation(affine3)
-                    }),
+                            Affine2::from_translation(transform)
+                        })
+                }
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -1076,19 +1098,25 @@ pub fn extract_viewport_nodes(
 
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
+            // Convert UiTransform and Transform 2D coordinate system
+            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query
-                    .get(target.0)
-                    .map(|(global, anchor, contain)| {
-                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => {
+                    ui_contain_query
+                        .get(target.0)
+                        .map(|(pos_contain, anchor, contain)| {
+                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
+                            let pos_ui_start = pos_contain.translation().xy()
+                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
+                                    * contain.size());
 
-                        let global = global.translation().xy()
-                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
+                            let pos_ui = pos_ui_start + transform.translation.xy();
+                            let transform = flip_y.transform_vector2(pos_ui);
 
-                        let affine3 = global + transform.translation.xy();
-
-                        Affine2::from_translation(affine3)
-                    }),
+                            Affine2::from_translation(transform)
+                        })
+                }
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -1179,20 +1207,26 @@ pub fn extract_text_sections(
 
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
+            // Convert UiTransform and Transform 2D coordinate system
+            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query
-                    .get(target.0)
-                    .map(|(global, anchor, contain)| {
-                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => {
+                    ui_contain_query
+                        .get(target.0)
+                        .map(|(pos_contain, anchor, contain)| {
+                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
+                            let pos_ui_start = pos_contain.translation().xy()
+                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
+                                    * contain.size());
 
-                        let global = global.translation().xy()
-                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
+                            let pos_ui = pos_ui_start + transform.translation.xy();
+                            let transform = flip_y.transform_vector2(pos_ui);
 
-                        let affine3 = global + transform.translation.xy();
-
-                        Affine2::from_translation(affine3)
-                            * Affine2::from_translation(-0.5 * uinode.size())
-                    }),
+                            Affine2::from_translation(transform)
+                                * Affine2::from_translation(-0.5 * uinode.size())
+                        })
+                }
                 None => {
                     Ok(Affine2::from(*transform) * Affine2::from_translation(-0.5 * uinode.size()))
                 }
@@ -1319,23 +1353,29 @@ pub fn extract_text_shadows(
 
         #[cfg(feature = "bevy_ui_contain")]
         let node_transform = {
+            // Convert UiTransform and Transform 2D coordinate system
+            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query
-                    .get(target.0)
-                    .map(|(global, anchor, contain)| {
-                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => {
+                    ui_contain_query
+                        .get(target.0)
+                        .map(|(pos_contain, anchor, contain)| {
+                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
+                            let pos_ui_start = pos_contain.translation().xy()
+                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
+                                    * contain.size());
 
-                        let global = global.translation().xy()
-                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
+                            let pos_ui = pos_ui_start + transform.translation.xy();
+                            let transform = flip_y.transform_vector2(pos_ui);
 
-                        let affine3 = global + transform.translation.xy();
-
-                        Affine2::from_translation(affine3)
-                            * Affine2::from_translation(
-                                -0.5 * uinode.size()
-                                    + shadow.offset / uinode.inverse_scale_factor(),
-                            )
-                    }),
+                            Affine2::from_translation(transform)
+                                * Affine2::from_translation(
+                                    -0.5 * uinode.size()
+                                        + shadow.offset / uinode.inverse_scale_factor(),
+                                )
+                        })
+                }
                 None => Ok(transform.affine()),
             };
             let Ok(transform) = transform else {
@@ -1480,20 +1520,26 @@ pub fn extract_text_decorations(
 
         #[cfg(feature = "bevy_ui_contain")]
         let transform = {
+            // Convert UiTransform and Transform 2D coordinate system
+            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
             let transform = match _is_contain_target {
-                Some(target) => ui_contain_query
-                    .get(target.0)
-                    .map(|(global, anchor, contain)| {
-                        use bevy_math::{Vec2Swizzles, Vec3Swizzles};
+                Some(target) => {
+                    ui_contain_query
+                        .get(target.0)
+                        .map(|(pos_contain, anchor, contain)| {
+                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
+                            let pos_ui_start = pos_contain.translation().xy()
+                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
+                                    * contain.size());
 
-                        let global = global.translation().xy()
-                            - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
+                            let pos_ui = pos_ui_start + global_transform.translation.xy();
+                            let transform = flip_y.transform_vector2(pos_ui);
 
-                        let affine3 = global + global_transform.translation.xy();
-
-                        Affine2::from_translation(affine3)
-                            * Affine2::from_translation(-0.5 * uinode.size())
-                    }),
+                            Affine2::from_translation(transform)
+                                * Affine2::from_translation(-0.5 * uinode.size())
+                        })
+                }
                 None => Ok(Affine2::from(global_transform)
                     * Affine2::from_translation(-0.5 * uinode.size())),
             };

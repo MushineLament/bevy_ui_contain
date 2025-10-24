@@ -20,12 +20,13 @@ fn setup(mut commands: Commands) {
                 scale_factor: 1.0,
                 physical_size: UVec2::new(500, 500),
             },
-            UiContainOverflow(Overflow::clip()),
-            Anchor::CENTER
+            // UiContainOverflow(Overflow::clip()),
+            Anchor::CENTER,
             // Sprite{
             //     custom_size : Some(Vec2::new(600.0,600.0)),
             //     ..Default::default()
             // }
+            // Transform::from_xyz(-500.0, 0.0, 0.0),
         ))
         .id();
 

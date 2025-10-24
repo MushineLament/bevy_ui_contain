@@ -17,6 +17,7 @@ use bevy_ecs::{
     query::Has,
     system::{Commands, Query, Res},
 };
+use bevy_math::{Affine2, Vec2, Vec3Swizzles};
 use bevy_math::{Rect, UVec2};
 #[cfg(feature = "bevy_ui_contain")]
 use bevy_sprite::Anchor;
@@ -52,20 +53,24 @@ pub fn update_clipping_system(
     )>,
 ) {
     for root_node in root_nodes.iter() {
+        // Clipping the root node based on the UiContain
         #[cfg(feature = "bevy_ui_contain")]
         let rect = if let Ok(target) = ui_contian_target_query.get(root_node) {
-            use bevy_math::Vec3Swizzles;
-
             let Ok((contain, overflow, anchor, global)) = ui_contain_query.get(target.0) else {
                 continue;
             };
 
-            // let mut clip_rect = Rect::from_center_size(global.translation().xy(), set.size());
-
+            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
             let global = global.translation().xy()
                 - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
 
-            let mut clip_rect = Rect::from_corners(global, global + contain.size());
+            // Convert UiTransform and Transform 2D coordinate system
+            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
+            let start = flip_y.transform_vector2(global);
+            let end = flip_y.transform_vector2(global + contain.size());
+
+            let mut clip_rect = Rect::from_corners(start, end);
 
             if overflow.x == OverflowAxis::Visible {
                 clip_rect.min.x = -f32::INFINITY;
