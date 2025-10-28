@@ -29,12 +29,12 @@ use bevy_shader::load_shader_library;
 use bevy_sprite::Anchor;
 use bevy_sprite_render::SpriteAssetEvents;
 use bevy_ui::widget::{ImageNode, TextShadow, ViewportNode};
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_ui::{UiContainSet, UiContainTarget};
 use bevy_ui::{
     BackgroundColor, BorderColor, CalculatedClip, ComputedNode, ComputedUiTargetCamera, Display,
     Node, Outline, ResolvedBorderRadius, UiGlobalTransform,
 };
-#[cfg(feature = "bevy_ui_contain")]
-use bevy_ui::{UiContainSet, UiContainTarget};
 
 use bevy_app::prelude::*;
 use bevy_asset::{AssetEvent, AssetId, Assets};
@@ -496,36 +496,6 @@ pub fn extract_uinode_background_colors(
             continue;
         };
 
-        #[cfg(feature = "bevy_ui_contain")]
-        let transform = {
-            // Convert UiTransform and Transform 2D coordinate system
-            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
-
-            let transform = match _is_contain_target {
-                Some(target) => {
-                    ui_contain_query
-                        .get(target.0)
-                        .map(|(pos_contain, anchor, contain)| {
-                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
-                            let pos_ui_start = pos_contain.translation().xy()
-                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
-                                    * contain.size());
-
-                            let pos_ui = pos_ui_start + transform.translation.xy();
-                            let transform = flip_y.transform_vector2(pos_ui);
-
-                            Affine2::from_translation(transform)
-                        })
-                }
-                None => Ok(transform.affine()),
-            };
-            let Ok(transform) = transform else {
-                continue;
-            };
-            transform
-        };
-
-        #[cfg(not(feature = "bevy_ui_contain"))]
         let transform: Affine2 = transform.into();
 
         extracted_uinodes.uinodes.push(ExtractedUiNode {
@@ -631,36 +601,6 @@ pub fn extract_uinode_images(
             None
         };
 
-        #[cfg(feature = "bevy_ui_contain")]
-        let transform = {
-            // Convert UiTransform and Transform 2D coordinate system
-            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
-
-            let transform = match _is_contain_target {
-                Some(target) => {
-                    ui_contain_query
-                        .get(target.0)
-                        .map(|(pos_contain, anchor, contain)| {
-                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
-                            let pos_ui_start = pos_contain.translation().xy()
-                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
-                                    * contain.size());
-
-                            let pos_ui = pos_ui_start + transform.translation.xy();
-                            let transform = flip_y.transform_vector2(pos_ui);
-
-                            Affine2::from_translation(transform)
-                        })
-                }
-                None => Ok(transform.affine()),
-            };
-            let Ok(transform) = transform else {
-                continue;
-            };
-            transform
-        };
-
-        #[cfg(not(feature = "bevy_ui_contain"))]
         let transform: Affine2 = transform.into();
 
         extracted_uinodes.uinodes.push(ExtractedUiNode {
@@ -723,36 +663,6 @@ pub fn extract_uinode_borders(
         _is_contain_target,
     ) in &uinode_query
     {
-        #[cfg(feature = "bevy_ui_contain")]
-        let transform = {
-            // Convert UiTransform and Transform 2D coordinate system
-            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
-
-            let transform = match _is_contain_target {
-                Some(target) => {
-                    ui_contain_query
-                        .get(target.0)
-                        .map(|(pos_contain, anchor, contain)| {
-                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
-                            let pos_ui_start = pos_contain.translation().xy()
-                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
-                                    * contain.size());
-
-                            let pos_ui = pos_ui_start + transform.translation.xy();
-                            let transform = flip_y.transform_vector2(pos_ui);
-
-                            Affine2::from_translation(transform)
-                        })
-                }
-                None => Ok(transform.affine()),
-            };
-            let Ok(transform) = transform else {
-                continue;
-            };
-            transform
-        };
-
-        #[cfg(not(feature = "bevy_ui_contain"))]
         let transform: Affine2 = transform.into();
 
         // Skip invisible borders and removed nodes
@@ -1096,36 +1006,6 @@ pub fn extract_viewport_nodes(
             continue;
         };
 
-        #[cfg(feature = "bevy_ui_contain")]
-        let transform = {
-            // Convert UiTransform and Transform 2D coordinate system
-            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
-
-            let transform = match _is_contain_target {
-                Some(target) => {
-                    ui_contain_query
-                        .get(target.0)
-                        .map(|(pos_contain, anchor, contain)| {
-                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
-                            let pos_ui_start = pos_contain.translation().xy()
-                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
-                                    * contain.size());
-
-                            let pos_ui = pos_ui_start + transform.translation.xy();
-                            let transform = flip_y.transform_vector2(pos_ui);
-
-                            Affine2::from_translation(transform)
-                        })
-                }
-                None => Ok(transform.affine()),
-            };
-            let Ok(transform) = transform else {
-                continue;
-            };
-            transform
-        };
-
-        #[cfg(not(feature = "bevy_ui_contain"))]
         let transform: Affine2 = transform.into();
 
         extracted_uinodes.uinodes.push(ExtractedUiNode {
@@ -1205,39 +1085,6 @@ pub fn extract_text_sections(
             continue;
         };
 
-        #[cfg(feature = "bevy_ui_contain")]
-        let transform = {
-            // Convert UiTransform and Transform 2D coordinate system
-            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
-
-            let transform = match _is_contain_target {
-                Some(target) => {
-                    ui_contain_query
-                        .get(target.0)
-                        .map(|(pos_contain, anchor, contain)| {
-                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
-                            let pos_ui_start = pos_contain.translation().xy()
-                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
-                                    * contain.size());
-
-                            let pos_ui = pos_ui_start + transform.translation.xy();
-                            let transform = flip_y.transform_vector2(pos_ui);
-
-                            Affine2::from_translation(transform)
-                                * Affine2::from_translation(-0.5 * uinode.size())
-                        })
-                }
-                None => {
-                    Ok(Affine2::from(*transform) * Affine2::from_translation(-0.5 * uinode.size()))
-                }
-            };
-            let Ok(transform) = transform else {
-                continue;
-            };
-            transform
-        };
-
-        #[cfg(not(feature = "bevy_ui_contain"))]
         let transform = Affine2::from(*transform) * Affine2::from_translation(-0.5 * uinode.size());
 
         let mut color = text_color.0.to_linear();
@@ -1351,40 +1198,6 @@ pub fn extract_text_shadows(
             continue;
         };
 
-        #[cfg(feature = "bevy_ui_contain")]
-        let node_transform = {
-            // Convert UiTransform and Transform 2D coordinate system
-            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
-
-            let transform = match _is_contain_target {
-                Some(target) => {
-                    ui_contain_query
-                        .get(target.0)
-                        .map(|(pos_contain, anchor, contain)| {
-                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
-                            let pos_ui_start = pos_contain.translation().xy()
-                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
-                                    * contain.size());
-
-                            let pos_ui = pos_ui_start + transform.translation.xy();
-                            let transform = flip_y.transform_vector2(pos_ui);
-
-                            Affine2::from_translation(transform)
-                                * Affine2::from_translation(
-                                    -0.5 * uinode.size()
-                                        + shadow.offset / uinode.inverse_scale_factor(),
-                                )
-                        })
-                }
-                None => Ok(transform.affine()),
-            };
-            let Ok(transform) = transform else {
-                continue;
-            };
-            transform
-        };
-
-        #[cfg(not(feature = "bevy_ui_contain"))]
         let node_transform = Affine2::from(*transform)
             * Affine2::from_translation(
                 -0.5 * uinode.size() + shadow.offset / uinode.inverse_scale_factor(),
@@ -1518,38 +1331,6 @@ pub fn extract_text_decorations(
             continue;
         };
 
-        #[cfg(feature = "bevy_ui_contain")]
-        let transform = {
-            // Convert UiTransform and Transform 2D coordinate system
-            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
-
-            let transform = match _is_contain_target {
-                Some(target) => {
-                    ui_contain_query
-                        .get(target.0)
-                        .map(|(pos_contain, anchor, contain)| {
-                            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
-                            let pos_ui_start = pos_contain.translation().xy()
-                                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec())
-                                    * contain.size());
-
-                            let pos_ui = pos_ui_start + global_transform.translation.xy();
-                            let transform = flip_y.transform_vector2(pos_ui);
-
-                            Affine2::from_translation(transform)
-                                * Affine2::from_translation(-0.5 * uinode.size())
-                        })
-                }
-                None => Ok(Affine2::from(global_transform)
-                    * Affine2::from_translation(-0.5 * uinode.size())),
-            };
-            let Ok(transform) = transform else {
-                continue;
-            };
-            transform
-        };
-
-        #[cfg(not(feature = "bevy_ui_contain"))]
         let transform =
             Affine2::from(global_transform) * Affine2::from_translation(-0.5 * uinode.size());
 
