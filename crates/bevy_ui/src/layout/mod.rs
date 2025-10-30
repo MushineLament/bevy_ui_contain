@@ -347,10 +347,11 @@ pub fn ui_layout_system(
                     if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
                         // 对anchor进行偏移，由于摄像机垂直翻转，所以anchor也进行垂直翻转
                         inherited_transform.translation +=
-                            Affine2::from_scale(Vec2::new(1.0, -1.0)).transform_vector2(
-                                global.translation().xy() + Anchor::TOP_LEFT.as_vec()
-                                    - anchor.as_vec(),
-                            ) * contain.size();
+                            Affine2::from_scale(Vec2::new(1.0, -1.0))
+                                .transform_vector2(global.translation().xy())
+                                + Affine2::from_scale(Vec2::new(1.0, -1.0))
+                                    .transform_vector2(Anchor::TOP_LEFT.as_vec() - anchor.as_vec())
+                                    * contain.size();
                     }
                 }
             }

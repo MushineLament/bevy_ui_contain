@@ -64,7 +64,7 @@ pub fn update_clipping_system(
             let global = global.translation().xy();
 
             let mut clip_rect = Rect::from_center_size(
-                global
+                Affine2::from_scale(Vec2::new(1.0, -1.0)).transform_vector2(global)
                     - Affine2::from_scale(Vec2::new(1.0, -1.0)).transform_vector2(anchor.as_vec())
                         * contain.size(),
                 contain.size(),

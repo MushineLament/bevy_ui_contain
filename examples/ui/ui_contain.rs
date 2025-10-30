@@ -21,7 +21,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 physical_size: UVec2::new(300, 300),
             },
             UiContainOverflow(Overflow::clip()),
-            Anchor::CENTER_LEFT,
+            Anchor::BOTTOM_RIGHT,
             // Sprite{
             //     custom_size : Some(Vec2::new(600.0,600.0)),
             //     ..Default::default()
@@ -34,8 +34,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn((
             Node {
                 display: Display::Block,
-                width: px(300.0),
-                height: px(300.0),
+                width: px(400.0),
+                height: px(400.0),
                 border: px(4.0).all(),
                 ..Default::default()
             },
