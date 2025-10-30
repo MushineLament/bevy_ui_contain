@@ -22,6 +22,8 @@ use bevy_camera::visibility::InheritedVisibility;
 use bevy_camera::{Camera, Camera2d, Camera3d};
 use bevy_reflect::prelude::ReflectDefault;
 use bevy_reflect::Reflect;
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_render::view::ColorGrading;
 use bevy_shader::load_shader_library;
 use bevy_sprite_render::SpriteAssetEvents;
 use bevy_ui::widget::{ImageNode, TextShadow, ViewportNode};
@@ -426,7 +428,9 @@ impl RenderGraphNode for RunUiSubgraphOnUiViewNode {
         };
 
         // Run the subgraph on the UI view.
-        graph.run_sub_graph(SubGraphUi, vec![], Some(ui_camera_view.0))?;
+        graph.run_sub_graph(SubGraphUi, vec![], Some(ui_camera_view.ui_camera))?;
+        #[cfg(feature = "bevy_ui_contain")]
+        graph.run_sub_graph(SubGraphUi, vec![], Some(ui_camera_view.ui_contain))?;
         Ok(())
     }
 }
@@ -733,7 +737,11 @@ const UI_CAMERA_SUBVIEW: u32 = 1;
 /// the 3D camera and contains the entity corresponding to the UI view.
 #[derive(Component)]
 /// Entity id of the temporary render entity with the corresponding extracted UI view.
-pub struct UiCameraView(pub Entity);
+pub struct UiCameraView {
+    pub ui_camera: Entity,
+    #[cfg(feature = "bevy_ui_contain")]
+    pub ui_contain: Entity,
+}
 
 /// A render-world component that lives on the UI view and specifies the
 /// corresponding main render target view.
@@ -744,6 +752,12 @@ pub struct UiCameraView(pub Entity);
 /// This is the inverse of [`UiCameraView`].
 #[derive(Component)]
 pub struct UiViewTarget(pub Entity);
+
+#[cfg(not(feature = "bevy_ui_contain"))]
+type UiContainView = ();
+
+#[cfg(feature = "bevy_ui_contain")]
+type UiContainView = (&'static GlobalTransform, Option<&'static ColorGrading>);
 
 /// Extracts all UI elements associated with a camera into the render world.
 pub fn extract_ui_camera_view(
@@ -758,6 +772,7 @@ pub fn extract_ui_camera_view(
                 Has<Hdr>,
                 Option<&UiAntiAlias>,
                 Option<&BoxShadowSamples>,
+                UiContainView,
             ),
             Or<(With<Camera2d>, With<Camera3d>)>,
         >,
@@ -766,7 +781,12 @@ pub fn extract_ui_camera_view(
 ) {
     live_entities.clear();
 
-    for (main_entity, render_entity, camera, hdr, ui_anti_alias, shadow_samples) in &query {
+    for (main_entity, render_entity, camera, hdr, ui_anti_alias, shadow_samples, _contain_view) in
+        &query
+    {
+        #[cfg(feature = "bevy_ui_contain")]
+        let (transform, color_grading) = _contain_view;
+
         // ignore inactive cameras
         if !camera.is_active {
             commands
@@ -777,6 +797,11 @@ pub fn extract_ui_camera_view(
         }
 
         if let Some(physical_viewport_rect) = camera.physical_viewport_rect() {
+            #[cfg(feature = "bevy_ui_contain")]
+            let (Some(viewport_size),) = (camera.physical_viewport_size(),) else {
+                continue;
+            };
+
             // use a projection matrix with the origin in the top left instead of the bottom left that comes with OrthographicProjection
             let projection_matrix = Mat4::orthographic_rh(
                 0.0,
@@ -815,11 +840,44 @@ pub fn extract_ui_camera_view(
                 ))
                 .id();
 
+            #[cfg(feature = "bevy_ui_contain")]
+            let color_grading = color_grading.unwrap_or(&ColorGrading::default()).clone();
+
+            let retained_view_entity_contain = RetainedViewEntity::new(main_entity.into(), None, 0);
+
+            #[cfg(feature = "bevy_ui_contain")]
+            let ui_contain_camera_view = commands
+                .spawn((
+                    ExtractedView {
+                        retained_view_entity: retained_view_entity_contain,
+                        clip_from_view: camera.clip_from_view(),
+                        world_from_view: *transform,
+                        clip_from_world: None,
+                        hdr,
+                        viewport: UVec4::new(
+                            physical_viewport_rect.min.x,
+                            physical_viewport_rect.min.y,
+                            viewport_size.x,
+                            viewport_size.y,
+                        ),
+                        color_grading,
+                    },
+                    // Link to the main camera view.
+                    UiViewTarget(render_entity),
+                    TemporaryRenderEntity,
+                ))
+                .id();
+
             let mut entity_commands = commands
                 .get_entity(render_entity)
                 .expect("Camera entity wasn't synced.");
             // Link from the main 2D/3D camera view to the UI view.
-            entity_commands.insert(UiCameraView(ui_camera_view));
+            entity_commands.insert(UiCameraView {
+                ui_camera: ui_camera_view,
+                #[cfg(feature = "bevy_ui_contain")]
+                ui_contain: ui_contain_camera_view,
+            });
+
             if let Some(ui_anti_alias) = ui_anti_alias {
                 entity_commands.insert(*ui_anti_alias);
             }
@@ -827,8 +885,10 @@ pub fn extract_ui_camera_view(
                 entity_commands.insert(*shadow_samples);
             }
             transparent_render_phases.insert_or_clear(retained_view_entity);
+            transparent_render_phases.insert_or_clear(retained_view_entity_contain);
 
             live_entities.insert(retained_view_entity);
+            live_entities.insert(retained_view_entity_contain);
         }
     }
 
@@ -1397,7 +1457,7 @@ pub fn queue_uinodes(
                 .ok()
                 .and_then(|(default_camera_view, ui_anti_alias)| {
                     camera_views
-                        .get(default_camera_view.0)
+                        .get(default_camera_view.ui_camera)
                         .ok()
                         .and_then(|view| {
                             transparent_render_phases
@@ -1432,6 +1492,56 @@ pub fn queue_uinodes(
             extra_index: PhaseItemExtraIndex::None,
             indexed: true,
         });
+    }
+    #[cfg(feature = "bevy_ui_contain")]
+    {
+        let mut current_camera_entity = Entity::PLACEHOLDER;
+
+        let mut current_phase = None;
+
+        for (index, extracted_uinode) in extracted_uinodes.uinodes.iter().enumerate() {
+            if current_camera_entity != extracted_uinode.extracted_camera_entity {
+                if let Ok((default_camera_view, ui_anti_alias)) =
+                    render_views.get(extracted_uinode.extracted_camera_entity)
+                {
+                    current_phase = camera_views
+                        .get(default_camera_view.ui_contain)
+                        .ok()
+                        .and_then(|view| {
+                            transparent_render_phases
+                                .get_mut(&view.retained_view_entity)
+                                .map(|transparent_phase| (view, ui_anti_alias, transparent_phase))
+                        });
+                };
+
+                current_camera_entity = extracted_uinode.extracted_camera_entity;
+            }
+
+            let Some((view, ui_anti_alias, transparent_phase)) = current_phase.as_mut() else {
+                continue;
+            };
+
+            let pipeline = pipelines.specialize(
+                &pipeline_cache,
+                &ui_pipeline,
+                UiPipelineKey {
+                    hdr: view.hdr,
+                    anti_alias: matches!(ui_anti_alias, None | Some(UiAntiAlias::On)),
+                },
+            );
+
+            transparent_phase.add(TransparentUi {
+                draw_function,
+                pipeline,
+                entity: (extracted_uinode.render_entity, extracted_uinode.main_entity),
+                sort_key: FloatOrd(extracted_uinode.z_order),
+                index,
+                // batch_range will be calculated in prepare_uinodes
+                batch_range: 0..0,
+                extra_index: PhaseItemExtraIndex::None,
+                indexed: true,
+            });
+        }
     }
 }
 
