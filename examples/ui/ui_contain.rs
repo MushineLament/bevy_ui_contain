@@ -7,7 +7,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
-        .add_systems(Update, (update_camera, update_node))
+        .add_systems(Update, (update_camera, update_node, button))
         .run();
 }
 
@@ -46,6 +46,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 left: Srgba::WHITE.into(),
             },
             Propagate(UiContainTarget(uicontain)),
+            Button,
         ))
         .with_children(|parent| {
             // parent.spawn((
@@ -138,5 +139,19 @@ fn update_node(query: Query<&mut Transform, With<UiContainSet>>, input: Res<Butt
 
         trans.translation.x += right - left;
         trans.translation.y += up - down;
+    }
+}
+
+fn button(query: Query<&Interaction>) {
+    for inter in query {
+        match inter {
+            Interaction::Pressed => {
+                info!("THE WORLD");
+            }
+            Interaction::Hovered => {
+                info!("不妨再靠近一点");
+            }
+            Interaction::None => (),
+        }
     }
 }
