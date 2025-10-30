@@ -61,16 +61,14 @@ pub fn update_clipping_system(
             };
 
             // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
-            let global = global.translation().xy()
-                - ((anchor.as_vec() - Anchor::BOTTOM_LEFT.as_vec()) * contain.size());
+            let global = global.translation().xy();
 
-            // Convert UiTransform and Transform 2D coordinate system
-            let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
-
-            let start = flip_y.transform_vector2(global);
-            let end = flip_y.transform_vector2(global + contain.size());
-
-            let mut clip_rect = Rect::from_corners(start, end);
+            let mut clip_rect = Rect::from_center_size(
+                global
+                    - Affine2::from_scale(Vec2::new(1.0, -1.0)).transform_vector2(anchor.as_vec())
+                        * contain.size(),
+                contain.size(),
+            );
 
             if overflow.x == OverflowAxis::Visible {
                 clip_rect.min.x = -f32::INFINITY;
@@ -113,7 +111,7 @@ fn update_clipping(
     entity: Entity,
     mut maybe_inherited_clip: Option<Rect>,
 ) {
-    let Ok((node, computed_node, transform, maybe_calculated_clip, has_override_clip, _)) =
+    let Ok((node, computed_node, transform, maybe_calculated_clip, has_override_clip, is_contain)) =
         node_query.get_mut(entity)
     else {
         return;

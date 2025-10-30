@@ -11,17 +11,17 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2d);
 
     let uicontain = commands
         .spawn((
             UiContainSet {
                 scale_factor: 1.0,
-                physical_size: UVec2::new(500, 500),
+                physical_size: UVec2::new(300, 300),
             },
-            // UiContainOverflow(Overflow::clip()),
-            Anchor::CENTER,
+            UiContainOverflow(Overflow::clip()),
+            Anchor::CENTER_LEFT,
             // Sprite{
             //     custom_size : Some(Vec2::new(600.0,600.0)),
             //     ..Default::default()
@@ -34,8 +34,8 @@ fn setup(mut commands: Commands) {
         .spawn((
             Node {
                 display: Display::Block,
-                width: percent(100.0),
-                height: percent(100.0),
+                width: px(300.0),
+                height: px(300.0),
                 border: px(4.0).all(),
                 ..Default::default()
             },
@@ -48,20 +48,23 @@ fn setup(mut commands: Commands) {
             Propagate(UiContainTarget(uicontain)),
         ))
         .with_children(|parent| {
-            parent.spawn((
-                Node {
-                    display: Display::Block,
-                    width: px(700.0),
-                    height: px(700.0),
-                    border: px(4.0).all(),
-                    ..Default::default()
-                },
-                BorderColor {
-                    top: Srgba::BLUE.into(),
-                    right: Srgba::GREEN.into(),
-                    bottom: Srgba::RED.into(),
-                    left: Srgba::WHITE.into(),
-                },
+            // parent.spawn((
+            //     Node {
+            //         display: Display::Block,
+            //         width: px(700.0),
+            //         height: px(700.0),
+            //         border: px(4.0).all(),
+            //         ..Default::default()
+            //     },
+            //     BorderColor {
+            //         top: Srgba::BLUE.into(),
+            //         right: Srgba::GREEN.into(),
+            //         bottom: Srgba::RED.into(),
+            //         left: Srgba::WHITE.into(),
+            //     },
+            // ));
+            parent.spawn(ImageNode::new(
+                asset_server.load("branding/bevy_bird_dark.png"),
             ));
         });
 

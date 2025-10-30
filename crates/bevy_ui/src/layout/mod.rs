@@ -1,11 +1,11 @@
-#[cfg(feature = "bevy_ui_contain")]
-use crate::UiContainTarget;
 use crate::{
     experimental::{UiChildren, UiRootNodes},
     ui_transform::{UiGlobalTransform, UiTransform},
     BorderRadius, ComputedNode, ComputedUiRenderTargetInfo, ContentSize, Display, LayoutConfig,
     Node, Outline, OverflowAxis, ScrollPosition,
 };
+#[cfg(feature = "bevy_ui_contain")]
+use crate::{UiContainSet, UiContainTarget};
 use bevy_ecs::{
     change_detection::{DetectChanges, DetectChangesMut},
     entity::Entity,
@@ -18,8 +18,12 @@ use bevy_ecs::{
 
 #[cfg(feature = "bevy_ui_contain")]
 use bevy_math::Mat2;
-use bevy_math::{Affine2, Vec2};
+use bevy_math::{Affine2, Vec2, Vec3Swizzles};
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_sprite::Anchor;
 use bevy_sprite::BorderRect;
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_transform::components::GlobalTransform;
 use thiserror::Error;
 use ui_surface::UiSurface;
 
@@ -109,6 +113,11 @@ pub fn ui_layout_system(
     mut removed_nodes: RemovedComponents<Node>,
     #[cfg(feature = "bevy_ui_contain")] mut ui_surface_query: Query<&mut UiSurface>,
     #[cfg(feature = "bevy_ui_contain")] contain_target_query: Query<&UiContainTarget>,
+    #[cfg(feature = "bevy_ui_contain")] contain_query: Query<(
+        &GlobalTransform,
+        &UiContainSet,
+        &Anchor,
+    )>,
 ) {
     // When a `ContentSize` component is removed from an entity, we need to remove the measure from the corresponding taffy node.
     for entity in removed_content_sizes.read() {
@@ -239,6 +248,8 @@ pub fn ui_layout_system(
             computed_target.scale_factor.recip(),
             Vec2::ZERO,
             Vec2::ZERO,
+            #[cfg(feature = "bevy_ui_contain")]
+            &contain_query,
         );
     }
 
@@ -264,6 +275,11 @@ pub fn ui_layout_system(
         inverse_target_scale_factor: f32,
         parent_size: Vec2,
         parent_scroll_position: Vec2,
+        #[cfg(feature = "bevy_ui_contain")] contain_query: &Query<(
+            &GlobalTransform,
+            &UiContainSet,
+            &Anchor,
+        )>,
     ) {
         if let Ok((
             mut node,
@@ -274,7 +290,7 @@ pub fn ui_layout_system(
             maybe_border_radius,
             maybe_outline,
             maybe_scroll_position,
-            is_contain,
+            _is_contain,
         )) = node_update_query.get_mut(entity)
         {
             let use_rounding = maybe_layout_config
@@ -326,15 +342,17 @@ pub fn ui_layout_system(
             local_transform.translation += local_center;
             inherited_transform *= local_transform;
 
-            if is_contain.is_some() && ui_children.get_parent(entity).is_none() {
-                #[cfg(feature = "bevy_ui_contain")]
-                pub const UI_WORLD_MAT2: Mat2 =
-                    Mat2::from_cols(Vec2::new(1.0, 8.742278e-8), Vec2::new(8.742278e-8, -1.0));
-
-                inherited_transform = Affine2::from_mat2_translation(
-                    UI_WORLD_MAT2,
-                    UI_WORLD_MAT2 * inherited_transform.translation,
-                );
+            if ui_children.get_parent(entity).is_none() {
+                if let Some(target) = _is_contain {
+                    if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
+                        // 对anchor进行偏移，由于摄像机垂直翻转，所以anchor也进行垂直翻转
+                        inherited_transform.translation +=
+                            Affine2::from_scale(Vec2::new(1.0, -1.0)).transform_vector2(
+                                global.translation().xy() + Anchor::TOP_LEFT.as_vec()
+                                    - anchor.as_vec(),
+                            ) * contain.size();
+                    }
+                }
             }
 
             if inherited_transform != **global_transform {
@@ -418,6 +436,7 @@ pub fn ui_layout_system(
                     inverse_target_scale_factor,
                     layout_size,
                     physical_scroll_position,
+                    contain_query,
                 );
             }
         }

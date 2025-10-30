@@ -20,6 +20,8 @@ mod debug_overlay;
 
 use bevy_camera::visibility::InheritedVisibility;
 use bevy_camera::{Camera, Camera2d, Camera3d};
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_math::Mat3;
 use bevy_reflect::prelude::ReflectDefault;
 use bevy_reflect::Reflect;
 #[cfg(feature = "bevy_ui_contain")]
@@ -29,12 +31,12 @@ use bevy_shader::load_shader_library;
 use bevy_sprite::Anchor;
 use bevy_sprite_render::SpriteAssetEvents;
 use bevy_ui::widget::{ImageNode, TextShadow, ViewportNode};
-#[cfg(feature = "bevy_ui_contain")]
-use bevy_ui::{UiContainSet, UiContainTarget};
 use bevy_ui::{
     BackgroundColor, BorderColor, CalculatedClip, ComputedNode, ComputedUiTargetCamera, Display,
     Node, Outline, ResolvedBorderRadius, UiGlobalTransform,
 };
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_ui::{UiContainSet, UiContainTarget};
 
 use bevy_app::prelude::*;
 use bevy_asset::{AssetEvent, AssetId, Assets};
@@ -911,7 +913,11 @@ pub fn extract_ui_camera_view(
                 .spawn((
                     ExtractedView {
                         retained_view_entity: retained_view_entity_contain,
-                        clip_from_view: camera.clip_from_view(),
+                        clip_from_view: camera.clip_from_view()
+                            * Mat4::from_mat3(Mat3::from_mat2(Mat2::from_cols(
+                                Vec2::new(1.0, 0.0),
+                                Vec2::new(0.0, -1.0),
+                            ))),
                         world_from_view: *transform,
                         clip_from_world: None,
                         hdr,
