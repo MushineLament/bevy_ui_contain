@@ -354,6 +354,7 @@ pub fn extract_gradients(
             &InheritedVisibility,
             Option<&CalculatedClip>,
             AnyOf<(&BackgroundGradient, &BorderGradient)>,
+            Feature,
         )>,
     >,
     camera_map: Extract<UiCameraMap>,
@@ -370,6 +371,7 @@ pub fn extract_gradients(
         inherited_visibility,
         clip,
         (gradient, gradient_border),
+        _feature,
     ) in &gradients_query
     {
         // Skip invisible images
@@ -419,6 +421,7 @@ pub fn extract_gradients(
                         },
                         main_entity: entity.into(),
                         render_entity: commands.spawn(TemporaryRenderEntity).id(),
+                        is_contain: _feature,
                     });
                     continue;
                 }
