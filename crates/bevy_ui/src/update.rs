@@ -6,6 +6,8 @@ use crate::{
     CalculatedClip, ComputedUiRenderTargetInfo, ComputedUiTargetCamera, DefaultUiCamera, Display,
     Node, OverflowAxis, OverrideClip, UiScale, UiTargetCamera,
 };
+#[cfg(feature = "bevy_ui_contain")]
+use crate::{UiContainOverflow, UiContainSet, UiContainTarget};
 
 use super::ComputedNode;
 use bevy_app::Propagate;
@@ -16,7 +18,17 @@ use bevy_ecs::{
     system::{Commands, Query, Res},
 };
 use bevy_math::{Rect, UVec2};
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_sprite::Anchor;
 use bevy_sprite::BorderRect;
+#[cfg(feature = "bevy_ui_contain")]
+use bevy_transform::components::GlobalTransform;
+
+#[cfg(not(feature = "bevy_ui_contain"))]
+type Feature = ();
+
+#[cfg(feature = "bevy_ui_contain")]
+type Feature = Option<&'static UiContainTarget>;
 
 /// Updates clipping for all nodes
 pub fn update_clipping_system(
@@ -28,16 +40,61 @@ pub fn update_clipping_system(
         &UiGlobalTransform,
         Option<&mut CalculatedClip>,
         Has<OverrideClip>,
+        Feature,
     )>,
     ui_children: UiChildren,
+    #[cfg(feature = "bevy_ui_contain")] ui_contian_target_query: Query<&UiContainTarget>,
+    #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Query<(
+        &UiContainSet,
+        &UiContainOverflow,
+        &Anchor,
+        &GlobalTransform,
+    )>,
 ) {
     for root_node in root_nodes.iter() {
+        // Clipping the root node based on the UiContain
+        #[cfg(feature = "bevy_ui_contain")]
+        let rect = if let Ok(target) = ui_contian_target_query.get(root_node) {
+            use bevy_math::{Affine2, Vec2, Vec3Swizzles};
+
+            let Ok((contain, overflow, anchor, global)) = ui_contain_query.get(target.0) else {
+                continue;
+            };
+
+            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
+            let global = global.translation().xy();
+
+            let mut clip_rect = Rect::from_center_size(
+                Affine2::from_scale(Vec2::new(1.0, -1.0)).transform_vector2(global)
+                    - Affine2::from_scale(Vec2::new(1.0, -1.0)).transform_vector2(anchor.as_vec())
+                        * contain.size()
+                        ,
+                contain.size(),
+            );
+
+            if overflow.x == OverflowAxis::Visible {
+                clip_rect.min.x = -f32::INFINITY;
+                clip_rect.max.x = f32::INFINITY;
+            }
+            if overflow.y == OverflowAxis::Visible {
+                clip_rect.min.y = -f32::INFINITY;
+                clip_rect.max.y = f32::INFINITY;
+            }
+
+            Some(clip_rect)
+        } else {
+            None
+        };
+
+        #[cfg(not(feature = "bevy_ui_contain"))]
+        let rect = None;
+
         update_clipping(
             &mut commands,
             &ui_children,
             &mut node_query,
             root_node,
-            None,
+            rect,
         );
     }
 }
@@ -51,11 +108,12 @@ fn update_clipping(
         &UiGlobalTransform,
         Option<&mut CalculatedClip>,
         Has<OverrideClip>,
+        Feature,
     )>,
     entity: Entity,
     mut maybe_inherited_clip: Option<Rect>,
 ) {
-    let Ok((node, computed_node, transform, maybe_calculated_clip, has_override_clip)) =
+    let Ok((node, computed_node, transform, maybe_calculated_clip, has_override_clip, is_contain)) =
         node_query.get_mut(entity)
     else {
         return;

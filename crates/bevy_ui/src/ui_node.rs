@@ -2887,6 +2887,16 @@ pub struct UiContainSet {
     pub physical_size: UVec2,
 }
 
+impl UiContainSet {
+    pub fn size(&self) -> Vec2 {
+        self.physical_size.as_vec2() * self.scale_factor
+    }
+}
+
+#[derive(Component, Clone, Copy, Debug, Reflect, PartialEq, Default, Deref, DerefMut)]
+#[reflect(Component, PartialEq, Clone)]
+pub struct UiContainOverflow(pub Overflow);
+
 #[cfg(test)]
 mod tests {
     use crate::GridPlacement;

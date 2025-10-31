@@ -42,7 +42,7 @@ use bevy_core_pipeline::core_3d::graph::{Core3d, Node3d};
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::SystemParam;
 use bevy_image::{prelude::*, TRANSPARENT_IMAGE_HANDLE};
-use bevy_math::{Affine2, FloatOrd, Mat4, Rect, UVec4, Vec2, Vec3};
+use bevy_math::{Affine2, FloatOrd, Mat4, Rect, UVec4, Vec2, Vec3, Vec3Swizzles};
 use bevy_render::{
     render_asset::RenderAssets,
     render_graph::{Node as RenderGraphNode, NodeRunError, RenderGraph, RenderGraphContext},
@@ -1779,8 +1779,12 @@ pub fn prepare_uinodes(
                         };
 
                         if extracted_uinode.is_contain {
-                            positions[0].y *= -1.0;
-                            positions[1].y *= -1.0;
+                            let flip = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
+                            positions[0] = flip.transform_vector2(positions[0].xy()).extend(0.0);
+                            positions[1] = flip.transform_vector2(positions[1].xy()).extend(0.0);
+                            positions[2] = flip.transform_vector2(positions[2].xy()).extend(0.0);
+                            positions[3] = flip.transform_vector2(positions[3].xy()).extend(0.0);
                         }
 
                         let positions_clipped = [
@@ -1789,8 +1793,6 @@ pub fn prepare_uinodes(
                             positions[2] + positions_diff[2].extend(0.),
                             positions[3] + positions_diff[3].extend(0.),
                         ];
-
-                        tracing::info!("positions_clipped:{:?}", positions_clipped);
 
                         let points = [
                             points[0] + positions_diff[0],
