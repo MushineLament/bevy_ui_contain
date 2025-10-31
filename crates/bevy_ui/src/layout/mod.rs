@@ -343,12 +343,12 @@ pub fn ui_layout_system(
             if ui_children.get_parent(entity).is_none() {
                 if let Some(target) = _is_contain {
                     if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
-                        inherited_transform.translation +=
-                            Affine2::from_scale(Vec2::new(1.0, -1.0))
-                                .transform_vector2(global.translation().xy())
-                                + Affine2::from_scale(Vec2::new(1.0, -1.0))
-                                    .transform_vector2(Anchor::TOP_LEFT.as_vec() - anchor.as_vec())
-                                    * contain.size();
+            //             inherited_transform.translation +=
+            //                 Affine2::from_scale(Vec2::new(1.0, -1.0))
+            //                     .transform_vector2(global.translation().xy())
+            //                     + Affine2::from_scale(Vec2::new(1.0, -1.0))
+            //                         .transform_vector2(Anchor::TOP_LEFT.as_vec() - anchor.as_vec())
+            //                         * contain.size();
                     }
                 }
             }

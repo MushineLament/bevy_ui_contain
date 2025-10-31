@@ -1749,7 +1749,7 @@ pub fn prepare_uinodes(
                         let transform = extracted_uinode.transform;
 
                         // Specify the corners of the node
-                        let mut positions = QUAD_VERTEX_POSITIONS
+                        let positions = QUAD_VERTEX_POSITIONS
                             .map(|pos| transform.transform_point2(pos * rect_size).extend(0.));
                         let points = QUAD_VERTEX_POSITIONS.map(|pos| pos * rect_size);
 
@@ -1778,28 +1778,33 @@ pub fn prepare_uinodes(
                             [Vec2::ZERO; 4]
                         };
 
-                        if extracted_uinode.is_contain {
-                            let flip = Affine2::from_scale(Vec2::new(1.0, -1.0));
-
-                            positions[0] = flip.transform_vector2(positions[0].xy()).extend(0.0);
-                            positions[1] = flip.transform_vector2(positions[1].xy()).extend(0.0);
-                            positions[2] = flip.transform_vector2(positions[2].xy()).extend(0.0);
-                            positions[3] = flip.transform_vector2(positions[3].xy()).extend(0.0);
-                        }
-
-                        let positions_clipped = [
+                        let mut positions_clipped = [
                             positions[0] + positions_diff[0].extend(0.),
                             positions[1] + positions_diff[1].extend(0.),
                             positions[2] + positions_diff[2].extend(0.),
                             positions[3] + positions_diff[3].extend(0.),
                         ];
 
-                        let points = [
+                        let mut points = [
                             points[0] + positions_diff[0],
                             points[1] + positions_diff[1],
                             points[2] + positions_diff[2],
                             points[3] + positions_diff[3],
                         ];
+
+                        if extracted_uinode.is_contain {
+                            let flip = Affine2::from_scale(Vec2::new(1.0, -1.0));
+
+                            // points
+                            //     .iter_mut()
+                            //     .for_each(|p| *p = flip.transform_vector2(*p));
+
+                            // positions_clipped.iter_mut().for_each(|p| {
+                            //     let vec2 = flip.transform_vector2(p.xy());
+                            //     p.x = vec2.x;
+                            //     p.y = vec2.y;
+                            // });
+                        }
 
                         let transformed_rect_size = transform.transform_vector2(rect_size);
 

@@ -69,48 +69,48 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             //         left: Srgba::WHITE.into(),
             //     },
             // ));
-            // parent.spawn(ImageNode::new(
-            //     asset_server.load("branding/bevy_bird_dark.png"),
-            // ));
+            parent.spawn(ImageNode::new(
+                asset_server.load("branding/bevy_bird_dark.png"),
+            ));
         });
 
-    // commands
-    //     .spawn((
-    //         Node {
-    //             width: percent(20.0),
-    //             height: percent(20.0),
-    //             right: px(0.0),
-    //             border: px(4.0).all(),
-    //             ..Default::default()
-    //         },
-    //         BorderColor {
-    //             top: Srgba::BLUE.into(),
-    //             right: Srgba::GREEN.into(),
-    //             bottom: Srgba::RED.into(),
-    //             left: Srgba::WHITE.into(),
-    //         },
-    //         // Propagate(UiContainTarget(uicontain)),
-    //     ))
-    //     .with_children(|parent| {
-    //         parent
-    //             .spawn((
-    //                 Node {
-    //                     width: px(150.0),
-    //                     height: px(150.0),
-    //                     border: px(4.0).all(),
-    //                     justify_self: JustifySelf::Center,
-    //                     ..Default::default()
-    //                 },
-    //                 BorderColor {
-    //                     top: Srgba::BLUE.into(),
-    //                     right: Srgba::GREEN.into(),
-    //                     bottom: Srgba::RED.into(),
-    //                     left: Srgba::WHITE.into(),
-    //                 },
-    //                 Text::new("node text"),
-    //             ))
-    //             .with_child((Text::new("node text"),));
-    //     });
+    commands
+        .spawn((
+            Node {
+                width: percent(20.0),
+                height: percent(20.0),
+                right: px(0.0),
+                border: px(4.0).all(),
+                ..Default::default()
+            },
+            BorderColor {
+                top: Srgba::BLUE.into(),
+                right: Srgba::GREEN.into(),
+                bottom: Srgba::RED.into(),
+                left: Srgba::WHITE.into(),
+            },
+            // Propagate(UiContainTarget(uicontain)),
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn((
+                    Node {
+                        width: px(150.0),
+                        height: px(150.0),
+                        border: px(4.0).all(),
+                        justify_self: JustifySelf::Center,
+                        ..Default::default()
+                    },
+                    BorderColor {
+                        top: Srgba::BLUE.into(),
+                        right: Srgba::GREEN.into(),
+                        bottom: Srgba::RED.into(),
+                        left: Srgba::WHITE.into(),
+                    },
+                    Text::new("node text"),
+                ))
+                .with_child((Text::new("node text"),));
+        });
 
     // commands.spawn((
     //     Text2d::new("sprite"),
