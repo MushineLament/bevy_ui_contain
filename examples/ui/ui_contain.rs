@@ -14,6 +14,11 @@ fn main() {
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2d);
 
+    commands.spawn(Sprite{
+       custom_size : Some(Vec2::splat(25.0)),
+       ..Default::default() 
+    });
+
     let uicontain = commands
         .spawn((
             UiContainSet {
@@ -34,8 +39,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn((
             Node {
                 display: Display::Block,
-                width: px(400.0),
-                height: px(400.0),
+                width: percent(100.0),
+                height: percent(100.0),
                 border: px(4.0).all(),
                 ..Default::default()
             },

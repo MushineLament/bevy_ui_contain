@@ -209,7 +209,11 @@ pub fn ui_focus_system(
                         .first_pressed_position()
                         .map(|pos| pos * window.scale_factor())
                 })
-                .map(|cursor_position| (entity, cursor_position - viewport_position))
+                .map(|cursor_position| {
+                    tracing::info!("cursor_position:{:?}", cursor_position);
+
+                    (entity, cursor_position - viewport_position)
+                })
         })
         .collect();
 

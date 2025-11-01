@@ -46,7 +46,7 @@ use bevy_core_pipeline::core_3d::graph::{Core3d, Node3d};
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::SystemParam;
 use bevy_image::{prelude::*, TRANSPARENT_IMAGE_HANDLE};
-use bevy_math::{Affine2, FloatOrd, Mat4, Rect, UVec4, Vec2};
+use bevy_math::{Affine2, FloatOrd, Mat4, Rect, UVec4, Vec2, Vec3};
 use bevy_render::{
     render_asset::RenderAssets,
     render_graph::{Node as RenderGraphNode, NodeRunError, RenderGraph, RenderGraphContext},
@@ -836,6 +836,7 @@ pub fn extract_ui_camera_view(
                 Option<&UiAntiAlias>,
                 Option<&BoxShadowSamples>,
                 UiContainView,
+                &GlobalTransform,
             ),
             Or<(With<Camera2d>, With<Camera3d>)>,
         >,
@@ -844,8 +845,16 @@ pub fn extract_ui_camera_view(
 ) {
     live_entities.clear();
 
-    for (main_entity, render_entity, camera, hdr, ui_anti_alias, shadow_samples, _contain_view) in
-        &query
+    for (
+        main_entity,
+        render_entity,
+        camera,
+        hdr,
+        ui_anti_alias,
+        shadow_samples,
+        _contain_view,
+        global_camera,
+    ) in &query
     {
         #[cfg(feature = "bevy_ui_contain")]
         let (transform, color_grading) = _contain_view;
@@ -908,17 +917,18 @@ pub fn extract_ui_camera_view(
 
             let retained_view_entity_contain = RetainedViewEntity::new(main_entity.into(), None, 0);
 
+            let mut global_camera = global_camera.compute_transform();
+
+            // global_camera.scale *= Vec3::new(1.0, -1.0, 1.0);
+
             #[cfg(feature = "bevy_ui_contain")]
             let ui_contain_camera_view = commands
                 .spawn((
                     ExtractedView {
                         retained_view_entity: retained_view_entity_contain,
                         clip_from_view: camera.clip_from_view()
-                            * Mat4::from_mat3(Mat3::from_mat2(Mat2::from_cols(
-                                Vec2::new(1.0, 0.0),
-                                Vec2::new(0.0, -1.0),
-                            ))),
-                        world_from_view: *transform,
+                           ,
+                        world_from_view: global_camera.into(),
                         clip_from_world: None,
                         hdr,
                         viewport: UVec4::new(
