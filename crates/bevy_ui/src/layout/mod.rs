@@ -111,11 +111,7 @@ pub fn ui_layout_system(
     mut removed_nodes: RemovedComponents<Node>,
     #[cfg(feature = "bevy_ui_contain")] mut ui_surface_query: Query<&mut UiSurface>,
     #[cfg(feature = "bevy_ui_contain")] contain_target_query: Query<&UiContainTarget>,
-    #[cfg(feature = "bevy_ui_contain")] contain_query: Query<(
-        &GlobalTransform,
-        &UiContainSet,
-        &Anchor,
-    )>,
+    #[cfg(feature = "bevy_ui_contain")] contain_query: Query<(&GlobalTransform, &UiContainSet)>,
 ) {
     // When a `ContentSize` component is removed from an entity, we need to remove the measure from the corresponding taffy node.
     for entity in removed_content_sizes.read() {
@@ -276,7 +272,6 @@ pub fn ui_layout_system(
         #[cfg(feature = "bevy_ui_contain")] contain_query: &Query<(
             &GlobalTransform,
             &UiContainSet,
-            &Anchor,
         )>,
     ) {
         if let Ok((
@@ -337,18 +332,15 @@ pub fn ui_layout_system(
                 layout_size,
                 target_size,
             );
-            local_transform.translation += local_center;
+            if _is_contain.is_none() {
+                local_transform.translation += local_center;
+            }
             inherited_transform *= local_transform;
 
             if ui_children.get_parent(entity).is_none() {
                 if let Some(target) = _is_contain {
-                    if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
-            //             inherited_transform.translation +=
-            //                 Affine2::from_scale(Vec2::new(1.0, -1.0))
-            //                     .transform_vector2(global.translation().xy())
-            //                     + Affine2::from_scale(Vec2::new(1.0, -1.0))
-            //                         .transform_vector2(Anchor::TOP_LEFT.as_vec() - anchor.as_vec())
-            //                         * contain.size();
+                    if let Ok((global, contain)) = contain_query.get(target.0) {
+                        inherited_transform.translation += global.translation().xy();
                     }
                 }
             }

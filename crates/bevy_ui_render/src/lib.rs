@@ -42,7 +42,7 @@ use bevy_core_pipeline::core_3d::graph::{Core3d, Node3d};
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::SystemParam;
 use bevy_image::{prelude::*, TRANSPARENT_IMAGE_HANDLE};
-use bevy_math::{Affine2, FloatOrd, Mat4, Rect, UVec4, Vec2, Vec3, Vec3Swizzles};
+use bevy_math::{Affine2, FloatOrd, Mat2, Mat4, Rect, UVec4, Vec2, Vec3, Vec3Swizzles};
 use bevy_render::{
     render_asset::RenderAssets,
     render_graph::{Node as RenderGraphNode, NodeRunError, RenderGraph, RenderGraphContext},
@@ -67,7 +67,7 @@ use bevy_text::{
     ComputedTextBlock, PositionedGlyph, Strikethrough, StrikethroughColor, TextBackgroundColor,
     TextColor, TextLayoutInfo, Underline, UnderlineColor,
 };
-use bevy_transform::components::GlobalTransform;
+use bevy_transform::components::{GlobalTransform, Transform};
 use box_shadow::BoxShadowPlugin;
 use bytemuck::{Pod, Zeroable};
 use core::ops::Range;
@@ -1746,12 +1746,35 @@ pub fn prepare_uinodes(
 
                         let rect_size = uinode_rect.size();
 
+                        // tracing::info!("uinode_rect:{:?}", uinode_rect);
                         let transform = extracted_uinode.transform;
+                        // tracing::info!("transform:{:?}", transform);
 
                         // Specify the corners of the node
-                        let positions = QUAD_VERTEX_POSITIONS
+                        let mut positions = QUAD_VERTEX_POSITIONS
                             .map(|pos| transform.transform_point2(pos * rect_size).extend(0.));
-                        let points = QUAD_VERTEX_POSITIONS.map(|pos| pos * rect_size);
+
+                        let mut points = QUAD_VERTEX_POSITIONS.map(|pos| pos * rect_size);
+
+                        if extracted_uinode.is_contain {
+                            positions = [
+                                (Vec2::new(-0.5, -0.5) * rect_size + transform.translation)
+                                    .extend(0.0),
+                                (Vec2::new(0.5, -0.5) * rect_size + transform.translation)
+                                    .extend(0.0),
+                                (Vec2::new(0.5, 0.5) * rect_size + transform.translation)
+                                    .extend(0.0),
+                                (Vec2::new(-0.5, 0.5) * rect_size + transform.translation)
+                                    .extend(0.0),
+                            ];
+
+                            // points = [
+                            //     (Vec2::new(0.0, 0.0) * rect_size),
+                            //     (Vec2::new(1.0, 0.0) * rect_size),
+                            //     (Vec2::new(1.0, -1.0) * rect_size),
+                            //     (Vec2::new(0.0, -1.0) * rect_size),
+                            // ]
+                        }
 
                         // Calculate the effect of clipping
                         // Note: this won't work with rotation/scaling, but that's much more complex (may need more that 2 quads)
@@ -1779,10 +1802,10 @@ pub fn prepare_uinodes(
                         };
 
                         let mut positions_clipped = [
-                            positions[0] + positions_diff[0].extend(0.),
-                            positions[1] + positions_diff[1].extend(0.),
-                            positions[2] + positions_diff[2].extend(0.),
-                            positions[3] + positions_diff[3].extend(0.),
+                            positions[0], // + positions_diff[0].extend(0.)
+                            positions[1], // + positions_diff[1].extend(0.)
+                            positions[2], // + positions_diff[2].extend(0.)
+                            positions[3], // + positions_diff[3].extend(0.)
                         ];
 
                         let mut points = [
@@ -1792,19 +1815,19 @@ pub fn prepare_uinodes(
                             points[3] + positions_diff[3],
                         ];
 
-                        if extracted_uinode.is_contain {
-                            let flip = Affine2::from_scale(Vec2::new(1.0, -1.0));
+                        // if extracted_uinode.is_contain {
+                        //     let flip = Affine2::from_scale(Vec2::new(1.0, -1.0));
 
-                            // points
-                            //     .iter_mut()
-                            //     .for_each(|p| *p = flip.transform_vector2(*p));
+                        //     // points
+                        //     //     .iter_mut()
+                        //     //     .for_each(|p| *p = flip.transform_vector2(*p));
 
-                            // positions_clipped.iter_mut().for_each(|p| {
-                            //     let vec2 = flip.transform_vector2(p.xy());
-                            //     p.x = vec2.x;
-                            //     p.y = vec2.y;
-                            // });
-                        }
+                        //     positions_clipped.iter_mut().for_each(|p| {
+                        //         let vec2 = flip.transform_vector2(p.xy());
+                        //         p.x = vec2.x;
+                        //         p.y = vec2.y;
+                        //     });
+                        // }
 
                         let transformed_rect_size = transform.transform_vector2(rect_size);
 

@@ -9,7 +9,7 @@ fn main() {
         .add_systems(Startup, setup)
         .add_systems(Update, (update_camera, update_node))
         .run();
-}
+}       
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2d);
@@ -25,7 +25,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 scale_factor: 1.0,
                 physical_size: UVec2::new(300, 300),
             },
-            Anchor::BOTTOM_RIGHT,
+            // Anchor::BOTTOM_RIGHT,    
             // UiContainOverflow(Overflow::clip()),
             // Sprite{
             //     custom_size : Some(Vec2::new(600.0,600.0)),
@@ -74,43 +74,43 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ));
         });
 
-    commands
-        .spawn((
-            Node {
-                width: percent(20.0),
-                height: percent(20.0),
-                right: px(0.0),
-                border: px(4.0).all(),
-                ..Default::default()
-            },
-            BorderColor {
-                top: Srgba::BLUE.into(),
-                right: Srgba::GREEN.into(),
-                bottom: Srgba::RED.into(),
-                left: Srgba::WHITE.into(),
-            },
-            // Propagate(UiContainTarget(uicontain)),
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn((
-                    Node {
-                        width: px(150.0),
-                        height: px(150.0),
-                        border: px(4.0).all(),
-                        justify_self: JustifySelf::Center,
-                        ..Default::default()
-                    },
-                    BorderColor {
-                        top: Srgba::BLUE.into(),
-                        right: Srgba::GREEN.into(),
-                        bottom: Srgba::RED.into(),
-                        left: Srgba::WHITE.into(),
-                    },
-                    Text::new("node text"),
-                ))
-                .with_child((Text::new("node text"),));
-        });
+    // commands
+    //     .spawn((
+    //         Node {
+    //             width: percent(20.0),
+    //             height: percent(20.0),
+    //             right: px(0.0),
+    //             border: px(4.0).all(),
+    //             ..Default::default()
+    //         },
+    //         BorderColor {
+    //             top: Srgba::BLUE.into(),
+    //             right: Srgba::GREEN.into(),
+    //             bottom: Srgba::RED.into(),
+    //             left: Srgba::WHITE.into(),
+    //         },
+    //         // Propagate(UiContainTarget(uicontain)),
+    //     ))
+    //     .with_children(|parent| {
+    //         parent
+    //             .spawn((
+    //                 Node {
+    //                     width: px(150.0),
+    //                     height: px(150.0),
+    //                     border: px(4.0).all(),
+    //                     justify_self: JustifySelf::Center,
+    //                     ..Default::default()
+    //                 },
+    //                 BorderColor {
+    //                     top: Srgba::BLUE.into(),
+    //                     right: Srgba::GREEN.into(),
+    //                     bottom: Srgba::RED.into(),
+    //                     left: Srgba::WHITE.into(),
+    //                 },
+    //                 Text::new("node text"),
+    //             ))
+    //             .with_child((Text::new("node text"),));
+    //     });
 
     // commands.spawn((
     //     Text2d::new("sprite"),
