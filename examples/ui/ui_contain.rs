@@ -25,7 +25,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 scale_factor: 1.0,
                 physical_size: UVec2::new(300, 300),
             },
-            // Anchor::BOTTOM_RIGHT,    
+            Anchor::TOP_LEFT,    
             // UiContainOverflow(Overflow::clip()),
             // Sprite{
             //     custom_size : Some(Vec2::new(600.0,600.0)),
@@ -69,9 +69,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             //         left: Srgba::WHITE.into(),
             //     },
             // ));
-            parent.spawn(ImageNode::new(
-                asset_server.load("branding/bevy_bird_dark.png"),
-            ));
+            // parent.spawn(ImageNode::new(
+            //     asset_server.load("branding/bevy_bird_dark.png"),
+            // ));
         });
 
     // commands

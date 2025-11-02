@@ -111,15 +111,21 @@ pub fn ui_layout_system(
     mut removed_nodes: RemovedComponents<Node>,
     #[cfg(feature = "bevy_ui_contain")] mut ui_surface_query: Query<&mut UiSurface>,
     #[cfg(feature = "bevy_ui_contain")] contain_target_query: Query<&UiContainTarget>,
-    #[cfg(feature = "bevy_ui_contain")] contain_query: Query<(&GlobalTransform, &UiContainSet)>,
+    #[cfg(feature = "bevy_ui_contain")] contain_query: Query<(
+        &GlobalTransform,
+        &UiContainSet,
+        &Anchor,
+    )>,
 ) {
     // When a `ContentSize` component is removed from an entity, we need to remove the measure from the corresponding taffy node.
     for entity in removed_content_sizes.read() {
         ui_surface.try_remove_node_context(entity);
         #[cfg(feature = "bevy_ui_contain")]
-        ui_surface_query.iter_mut().for_each(|mut ui_surface| {
-            ui_surface.try_remove_node_context(entity);
-        });
+        ui_surface_query.iter_mut().for_each(
+            |mut ui_surface: bevy_ecs::world::Mut<'_, UiSurface>| {
+                ui_surface.try_remove_node_context(entity);
+            },
+        );
     }
 
     // Sync Node and ContentSize to Taffy for all nodes
@@ -272,6 +278,7 @@ pub fn ui_layout_system(
         #[cfg(feature = "bevy_ui_contain")] contain_query: &Query<(
             &GlobalTransform,
             &UiContainSet,
+            &Anchor,
         )>,
     ) {
         if let Ok((
@@ -339,8 +346,8 @@ pub fn ui_layout_system(
 
             if ui_children.get_parent(entity).is_none() {
                 if let Some(target) = _is_contain {
-                    if let Ok((global, contain)) = contain_query.get(target.0) {
-                        inherited_transform.translation += global.translation().xy();
+                    if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
+                        inherited_transform.translation += global.translation().xy() ;
                     }
                 }
             }

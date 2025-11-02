@@ -8,7 +8,7 @@ use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::{prelude::*, system::SystemParam};
 use bevy_math::{vec4, Rect, UVec2, Vec2, Vec4Swizzles};
 use bevy_reflect::prelude::*;
-use bevy_sprite::BorderRect;
+use bevy_sprite::{Anchor, BorderRect};
 use bevy_utils::once;
 use bevy_window::{PrimaryWindow, WindowRef};
 use core::{f32, num::NonZero};
@@ -2878,7 +2878,8 @@ pub struct UiContains(Vec<Entity>);
 #[require(
     crate::ui_surface::UiSurface,
     bevy_transform::components::Transform,
-    UiContains
+    UiContains,
+    Anchor
 )]
 pub struct UiContainSet {
     /// The scale factor of the target contain's render target.

@@ -57,7 +57,7 @@ use bevy_render::{
     view::{ExtractedView, Hdr, RetainedViewEntity, ViewUniforms},
     Extract, ExtractSchedule, Render, RenderApp, RenderStartup, RenderSystems,
 };
-use bevy_sprite::BorderRect;
+use bevy_sprite::{Anchor, BorderRect};
 #[cfg(feature = "bevy_ui_debug")]
 pub use debug_overlay::UiDebugOptions;
 use gradient::GradientPlugin;
@@ -1748,7 +1748,8 @@ pub fn prepare_uinodes(
 
                         // tracing::info!("uinode_rect:{:?}", uinode_rect);
                         let transform = extracted_uinode.transform;
-                        // tracing::info!("transform:{:?}", transform);
+                        tracing::info!("rect_size:{:?}", rect_size);
+                        tracing::info!("transform:{:?}", transform);
 
                         // Specify the corners of the node
                         let mut positions = QUAD_VERTEX_POSITIONS
@@ -1767,6 +1768,7 @@ pub fn prepare_uinodes(
                                 (Vec2::new(-0.5, 0.5) * rect_size + transform.translation)
                                     .extend(0.0),
                             ];
+
 
                             // points = [
                             //     (Vec2::new(0.0, 0.0) * rect_size),
