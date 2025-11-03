@@ -2880,17 +2880,12 @@ pub struct UiContains(Vec<Entity>);
     bevy_transform::components::Transform,
     UiContains,
     Anchor,
-    UiContainComputedSize
 )]
 pub struct UiContainSize(pub Vec2);
 
 #[derive(Component, Clone, Copy, Debug, Reflect, PartialEq, Default, Deref, DerefMut)]
 #[reflect(Component, PartialEq, Clone)]
 pub struct UiContainOverflow(pub Overflow);
-
-#[derive(Component, Clone, Copy, Debug, Reflect, PartialEq, Default, Deref, DerefMut)]
-#[reflect(Component, PartialEq, Clone)]
-pub struct UiContainComputedSize(pub ComputedUiRenderTargetInfo);
 
 #[cfg(test)]
 mod tests {

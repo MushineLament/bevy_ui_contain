@@ -30,36 +30,36 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             // }
             // Transform::from_xyz(-500.0, 0.0, 0.0),
             Sprite {
-                custom_size: Some(Vec2::new(300.0 * 1.5, 300.0 * 1.5)),
+                custom_size: Some(Vec2::new(300.0, 300.0)),
                 ..Default::default()
             },
         ))
         .id();
 
-    commands.spawn((
-        Node {
-            display: Display::Block,
-            width: percent(10.0),
-            height: percent(10.0),
-            border: px(4.0).all(),
-            ..Default::default()
-        },
-        BorderColor {
-            top: Srgba::BLUE.into(),
-            right: Srgba::GREEN.into(),
-            bottom: Srgba::RED.into(),
-            left: Srgba::WHITE.into(),
-        },
-        Propagate(UiContainTarget(uicontain)),
-        // Button,
-    ));
+    // commands.spawn((
+    //     Node {
+    //         display: Display::Block,
+    //         width: percent(10.0),
+    //         height: percent(10.0),
+    //         border: px(4.0).all(),
+    //         ..Default::default()
+    //     },
+    //     BorderColor {
+    //         top: Srgba::BLUE.into(),
+    //         right: Srgba::GREEN.into(),
+    //         bottom: Srgba::RED.into(),
+    //         left: Srgba::WHITE.into(),
+    //     },
+    //     Propagate(UiContainTarget(uicontain)),
+    //     // Button,
+    // ));
 
     commands
         .spawn((
             Node {
                 display: Display::Block,
-                width: px(400.0),
-                height: px(400.0),
+                width: percent(300.0),
+                height: percent(300.0),
                 border: px(4.0).all(),
                 ..Default::default()
             },
