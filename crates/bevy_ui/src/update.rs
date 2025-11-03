@@ -4,17 +4,17 @@ use crate::{
     experimental::{UiChildren, UiRootNodes},
     ui_transform::UiGlobalTransform,
     CalculatedClip, ComputedUiRenderTargetInfo, ComputedUiTargetCamera, DefaultUiCamera, Display,
-    Node, OverflowAxis, OverrideClip, UiScale, UiTargetCamera,
+    Node, OverflowAxis, OverrideClip, UiContainComputedSize, UiScale, UiTargetCamera,
 };
 #[cfg(feature = "bevy_ui_contain")]
-use crate::{UiContainOverflow, UiContainSet, UiContainTarget};
+use crate::{UiContainOverflow, UiContainSize, UiContainTarget};
 
 use super::ComputedNode;
 use bevy_app::Propagate;
 use bevy_camera::Camera;
 use bevy_ecs::{
     entity::Entity,
-    query::Has,
+    query::{Added, Changed, Has, With},
     system::{Commands, Query, Res},
 };
 use bevy_math::{Rect, UVec2};
@@ -45,7 +45,7 @@ pub fn update_clipping_system(
     ui_children: UiChildren,
     #[cfg(feature = "bevy_ui_contain")] ui_contian_target_query: Query<&UiContainTarget>,
     #[cfg(feature = "bevy_ui_contain")] ui_contain_query: Query<(
-        &UiContainSet,
+        &UiContainComputedSize,
         &UiContainOverflow,
         &Anchor,
         &GlobalTransform,
@@ -65,11 +65,8 @@ pub fn update_clipping_system(
             let global = global.translation().xy();
 
             let mut clip_rect = Rect::from_center_size(
-                Affine2::from_scale(Vec2::new(1.0, -1.0)).transform_vector2(global)
-                    - Affine2::from_scale(Vec2::new(1.0, -1.0)).transform_vector2(anchor.as_vec())
-                        * contain.size()
-                        ,
-                contain.size(),
+                global - contain.physical_size.as_vec2() * anchor.as_vec(),
+                contain.physical_size.as_vec2(),
             );
 
             if overflow.x == OverflowAxis::Visible {
@@ -230,6 +227,26 @@ pub fn propagate_ui_target_cameras(
                 scale_factor,
                 physical_size,
             }));
+    }
+}
+
+pub fn update_contain_computed_size(
+    camera_query: Query<&Camera>,
+    default_ui_camera: DefaultUiCamera,
+    ui_scale: Res<UiScale>,
+    mut contain_query: Query<(&mut UiContainComputedSize, &UiContainSize), Changed<UiContainSize>>,
+) {
+    if let Some(default_camera_entity) = default_ui_camera.get() {
+        let scale_factor = camera_query
+            .get(default_camera_entity)
+            .ok()
+            .map(|camera| camera.target_scaling_factor().unwrap_or(1.) * ui_scale.0)
+            .unwrap_or(1.);
+
+        contain_query.par_iter_mut().for_each(|(mut info, size)| {
+            info.scale_factor = scale_factor;
+            info.physical_size = (size.0 * scale_factor).as_uvec2();
+        });
     }
 }
 

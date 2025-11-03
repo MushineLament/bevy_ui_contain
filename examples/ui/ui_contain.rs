@@ -9,7 +9,7 @@ fn main() {
         .add_systems(Startup, setup)
         .add_systems(Update, (update_camera, update_node))
         .run();
-}       
+}
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2d);
@@ -21,12 +21,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let uicontain = commands
         .spawn((
-            UiContainSet {
-                scale_factor: 1.0,
-                physical_size: UVec2::new(300, 300),
-            },
-            Anchor::TOP_LEFT,    
-            // UiContainOverflow(Overflow::clip()),
+            UiContainSize(Vec2::new(400.0, 400.0)),
+            Anchor::CENTER_LEFT,
+            UiContainOverflow(Overflow::clip()),
             // Sprite{
             //     custom_size : Some(Vec2::new(600.0,600.0)),
             //     ..Default::default()
@@ -135,7 +132,10 @@ fn update_camera(query: Query<&mut Transform, With<Camera>>, input: Res<ButtonIn
     }
 }
 
-fn update_node(query: Query<&mut Transform, With<UiContainSet>>, input: Res<ButtonInput<KeyCode>>) {
+fn update_node(
+    query: Query<&mut Transform, With<UiContainSize>>,
+    input: Res<ButtonInput<KeyCode>>,
+) {
     for mut trans in query {
         let left = input.pressed(KeyCode::KeyA) as i8 as f32;
         let right = input.pressed(KeyCode::KeyD) as i8 as f32;

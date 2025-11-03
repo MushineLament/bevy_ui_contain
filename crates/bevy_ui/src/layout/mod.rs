@@ -5,7 +5,7 @@ use crate::{
     Node, Outline, OverflowAxis, ScrollPosition,
 };
 #[cfg(feature = "bevy_ui_contain")]
-use crate::{UiContainSet, UiContainTarget};
+use crate::{UiContainComputedSize, UiContainSize, UiContainTarget};
 use bevy_ecs::{
     change_detection::{DetectChanges, DetectChangesMut},
     entity::Entity,
@@ -113,7 +113,7 @@ pub fn ui_layout_system(
     #[cfg(feature = "bevy_ui_contain")] contain_target_query: Query<&UiContainTarget>,
     #[cfg(feature = "bevy_ui_contain")] contain_query: Query<(
         &GlobalTransform,
-        &UiContainSet,
+        &UiContainComputedSize,
         &Anchor,
     )>,
 ) {
@@ -277,7 +277,7 @@ pub fn ui_layout_system(
         parent_scroll_position: Vec2,
         #[cfg(feature = "bevy_ui_contain")] contain_query: &Query<(
             &GlobalTransform,
-            &UiContainSet,
+            &UiContainComputedSize,
             &Anchor,
         )>,
     ) {
@@ -347,7 +347,7 @@ pub fn ui_layout_system(
             if ui_children.get_parent(entity).is_none() {
                 if let Some(target) = _is_contain {
                     if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
-                        inherited_transform.translation += global.translation().xy() ;
+                        inherited_transform.translation += global.translation().xy() - contain.physical_size.as_vec2() * anchor.as_vec();
                     }
                 }
             }

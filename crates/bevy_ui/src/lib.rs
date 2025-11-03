@@ -78,6 +78,8 @@ use stack::ui_stack_system;
 pub use stack::UiStack;
 use update::{propagate_ui_target_cameras, update_clipping_system};
 
+use crate::update::update_contain_computed_size;
+
 /// The basic plugin for Bevy UI
 #[derive(Default)]
 pub struct UiPlugin;
@@ -197,7 +199,8 @@ impl Plugin for UiPlugin {
         app.add_systems(
             PostUpdate,
             (
-                propagate_ui_target_cameras.in_set(UiSystems::Prepare),
+                (propagate_ui_target_cameras, update_contain_computed_size)
+                    .in_set(UiSystems::Prepare),
                 ui_layout_system_config,
                 ui_stack_system
                     .in_set(UiSystems::Stack)
