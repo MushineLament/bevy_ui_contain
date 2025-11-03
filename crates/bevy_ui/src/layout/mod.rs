@@ -347,7 +347,20 @@ pub fn ui_layout_system(
             if ui_children.get_parent(entity).is_none() {
                 if let Some(target) = _is_contain {
                     if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
-                        inherited_transform.translation += global.translation().xy() - contain.physical_size.as_vec2() * anchor.as_vec();
+                        let translation = &mut inherited_transform.translation;
+
+                        *translation += global.translation().xy();
+
+                        let contain_size = contain.physical_size.as_vec2()
+                            * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
+
+                        *translation += contain_size;
+
+                        let top_left = layout_size * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
+
+                        *translation -= top_left;
+
+                        *translation -= layout_size * anchor.as_vec();
                     }
                 }
             }
