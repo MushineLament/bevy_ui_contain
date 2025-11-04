@@ -79,6 +79,12 @@ impl UiSurface {
     ) {
         let taffy = &mut self.taffy;
 
+        tracing::info!(
+            "layout_context:{:?},entity:{:?}",
+            (layout_context.scale_factor, layout_context.physical_size),
+            entity
+        );
+
         match self.entity_to_taffy.entry(entity) {
             Entry::Occupied(entry) => {
                 let taffy_node = *entry.get();
@@ -216,6 +222,7 @@ impl UiSurface {
                                 ctx,
                                 buffer_query,
                             );
+
                             let size = ctx.measure(
                                 MeasureArgs {
                                     width: known_dimensions.width,

@@ -1746,7 +1746,6 @@ pub fn prepare_uinodes(
 
                         let rect_size = uinode_rect.size();
 
-                        // tracing::info!("uinode_rect:{:?}", uinode_rect);
                         let transform = extracted_uinode.transform;
                         // tracing::info!("rect_size:{:?}", rect_size);
                         // tracing::info!("transform:{:?}", transform);
@@ -1771,12 +1770,12 @@ pub fn prepare_uinodes(
                                     .extend(0.0),
                             ];
 
-                            points = [
-                                (Vec2::new(-0.5, -0.5) * rect_size),
-                                (Vec2::new(0.5, -0.5) * rect_size),
-                                (Vec2::new(0.5, 0.5) * rect_size),
-                                (Vec2::new(-0.5, 0.5) * rect_size),
-                            ];
+                            // points = [
+                            //     (Vec2::new(-0.5, -0.5) * rect_size),
+                            //     (Vec2::new(0.5, -0.5) * rect_size),
+                            //     (Vec2::new(0.5, 0.5) * rect_size),
+                            //     (Vec2::new(-0.5, 0.5) * rect_size),
+                            // ];
                         }
 
                         // Calculate the effect of clipping
@@ -1784,6 +1783,8 @@ pub fn prepare_uinodes(
                         let mut positions_diff = if let Some(clip) = extracted_uinode.clip {
                             // tracing::info!("clip:{:?}", clip);
                             if extracted_uinode.is_contain {
+                                [Vec2::ZERO; 4]
+                            } else {
                                 [
                                     Vec2::new(
                                         f32::max(clip.min.x - positions[0].x, 0.),
@@ -1802,8 +1803,6 @@ pub fn prepare_uinodes(
                                         f32::min(clip.max.y - positions[3].y, 0.),
                                     ),
                                 ]
-                            } else {
-                                [Vec2::ZERO; 4]
                             }
                         } else {
                             [Vec2::ZERO; 4]
@@ -1822,7 +1821,6 @@ pub fn prepare_uinodes(
                             points[2], //  + positions_diff[2]
                             points[3], //  + positions_diff[3]
                         ];
-                        tracing::info!("points:{:?}", points);
 
                         // if extracted_uinode.is_contain {
                         //     let flip = Affine2::from_scale(Vec2::new(1.0, -1.0));

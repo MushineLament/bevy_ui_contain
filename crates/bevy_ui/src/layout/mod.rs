@@ -151,8 +151,8 @@ pub fn ui_layout_system(
                             return;
                         };
 
-                        let layout_context =
-                            LayoutContext::new(computed_target.scale_factor, size.0);
+                        // 其中1.0为缩放因子，而且是containsize的缩放因子
+                        let layout_context = LayoutContext::new(1.0, size.0);
 
                         let Ok(mut ui_surface) = ui_surface_query.get_mut(target.0) else {
                             tracing::error!(
@@ -242,7 +242,6 @@ pub fn ui_layout_system(
             let Ok((_, size, ..)) = contain_query.get(target.0) else {
                 continue;
             };
-
             size.0.as_uvec2()
         } else {
             computed_target.physical_size
