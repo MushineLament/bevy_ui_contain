@@ -52,20 +52,18 @@ pub fn update_clipping_system(
     )>,
 ) {
     for root_node in root_nodes.iter() {
-        // Clipping the root node based on the UiContain
         #[cfg(feature = "bevy_ui_contain")]
         let rect = if let Ok(target) = ui_contian_target_query.get(root_node) {
-            use bevy_math::{Affine2, Vec2, Vec3Swizzles};
+            use bevy_math::Vec3Swizzles;
 
             let Ok((contain, overflow, anchor, global)) = ui_contain_query.get(target.0) else {
                 continue;
             };
 
-            // Ui determines the starting position of the coordinates in the world based on the coordinates and size of UiContain
             let global = global.translation().xy();
 
             let mut clip_rect =
-                Rect::from_center_size(global - contain.0 * anchor.as_vec(), contain.0);
+                Rect::from_center_size(global + contain.0 * anchor.as_vec(), contain.0);
 
             if overflow.x == OverflowAxis::Visible {
                 clip_rect.min.x = -f32::INFINITY;

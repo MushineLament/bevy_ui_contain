@@ -22,17 +22,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let uicontain = commands
         .spawn((
             UiContainSize(Vec2::new(300.0, 300.0)),
-            Anchor::BOTTOM_RIGHT,
-            // UiContainOverflow(Overflow::clip()),
-            // Sprite{
-            //     custom_size : Some(Vec2::new(600.0,600.0)),
-            //     ..Default::default()
-            // }
+            Anchor::CENTER,
+            UiContainOverflow(Overflow::clip()),
             // Transform::from_xyz(-500.0, 0.0, 0.0),
-            Sprite {
-                custom_size: Some(Vec2::new(300.0, 300.0)),
-                ..Default::default()
-            },
+            // Sprite {
+            //     custom_size: Some(Vec2::new(300.0, 300.0)),
+            //     ..Default::default()
+            // },
         ))
         .id();
 

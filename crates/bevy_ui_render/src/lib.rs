@@ -1771,35 +1771,40 @@ pub fn prepare_uinodes(
                                     .extend(0.0),
                             ];
 
-                            // points = [
-                            //     (Vec2::new(0.0, 0.0) * rect_size),
-                            //     (Vec2::new(1.0, 0.0) * rect_size),
-                            //     (Vec2::new(1.0, -1.0) * rect_size),
-                            //     (Vec2::new(0.0, -1.0) * rect_size),
-                            // ]
+                            points = [
+                                (Vec2::new(-0.5, -0.5) * rect_size),
+                                (Vec2::new(0.5, -0.5) * rect_size),
+                                (Vec2::new(0.5, 0.5) * rect_size),
+                                (Vec2::new(-0.5, 0.5) * rect_size),
+                            ];
                         }
 
                         // Calculate the effect of clipping
                         // Note: this won't work with rotation/scaling, but that's much more complex (may need more that 2 quads)
                         let mut positions_diff = if let Some(clip) = extracted_uinode.clip {
-                            [
-                                Vec2::new(
-                                    f32::max(clip.min.x - positions[0].x, 0.),
-                                    f32::max(clip.min.y - positions[0].y, 0.),
-                                ),
-                                Vec2::new(
-                                    f32::min(clip.max.x - positions[1].x, 0.),
-                                    f32::max(clip.min.y - positions[1].y, 0.),
-                                ),
-                                Vec2::new(
-                                    f32::min(clip.max.x - positions[2].x, 0.),
-                                    f32::min(clip.max.y - positions[2].y, 0.),
-                                ),
-                                Vec2::new(
-                                    f32::max(clip.min.x - positions[3].x, 0.),
-                                    f32::min(clip.max.y - positions[3].y, 0.),
-                                ),
-                            ]
+                            // tracing::info!("clip:{:?}", clip);
+                            if extracted_uinode.is_contain {
+                                [
+                                    Vec2::new(
+                                        f32::max(clip.min.x - positions[0].x, 0.),
+                                        f32::max(clip.min.y - positions[0].y, 0.),
+                                    ),
+                                    Vec2::new(
+                                        f32::min(clip.max.x - positions[1].x, 0.),
+                                        f32::max(clip.min.y - positions[1].y, 0.),
+                                    ),
+                                    Vec2::new(
+                                        f32::min(clip.max.x - positions[2].x, 0.),
+                                        f32::min(clip.max.y - positions[2].y, 0.),
+                                    ),
+                                    Vec2::new(
+                                        f32::max(clip.min.x - positions[3].x, 0.),
+                                        f32::min(clip.max.y - positions[3].y, 0.),
+                                    ),
+                                ]
+                            } else {
+                                [Vec2::ZERO; 4]
+                            }
                         } else {
                             [Vec2::ZERO; 4]
                         };
@@ -1812,15 +1817,12 @@ pub fn prepare_uinodes(
                         ];
 
                         let mut points = [
-                            points[0], // + Vec2::splat(100.0)
-                            //  + positions_diff[0]
-                            points[1], // + Vec2::splat(100.0)
-                            //  + positions_diff[1]
-                            points[2], // + Vec2::splat(100.0)
-                            //  + positions_diff[2]
-                            points[3], // + Vec2::splat(100.0)
-                                       //  + positions_diff[3]
+                            points[0], //  + positions_diff[0]
+                            points[1], //  + positions_diff[1]
+                            points[2], //  + positions_diff[2]
+                            points[3], //  + positions_diff[3]
                         ];
+                        tracing::info!("points:{:?}", points);
 
                         // if extracted_uinode.is_contain {
                         //     let flip = Affine2::from_scale(Vec2::new(1.0, -1.0));
