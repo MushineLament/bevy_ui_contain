@@ -58,8 +58,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn((
             Node {
                 display: Display::Block,
-                width: percent(300.0),
-                height: percent(300.0),
+                width: percent(100.0),
+                height: percent(100.0),
                 border: px(4.0).all(),
                 ..Default::default()
             },

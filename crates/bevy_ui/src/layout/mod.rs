@@ -147,6 +147,13 @@ pub fn ui_layout_system(
                 #[cfg(feature = "bevy_ui_contain")]
                 {
                     if let Ok(target) = contain_target_query.get(entity) {
+                        let Ok((_, size, ..)) = contain_query.get(target.0) else {
+                            return;
+                        };
+
+                        let layout_context =
+                            LayoutContext::new(computed_target.scale_factor, size.0);
+
                         let Ok(mut ui_surface) = ui_surface_query.get_mut(target.0) else {
                             tracing::error!(
                                 "UiContainTarget pointing to an invalid UiContainSet Entity"
@@ -230,9 +237,20 @@ pub fn ui_layout_system(
 
         let (_, _, _, computed_target) = node_query.get(ui_root_entity).unwrap();
 
+        #[cfg(feature = "bevy_ui_contain")]
+        let render_size = if let Ok(target) = contain_target_query.get(ui_root_entity) {
+            let Ok((_, size, ..)) = contain_query.get(target.0) else {
+                continue;
+            };
+
+            size.0.as_uvec2()
+        } else {
+            computed_target.physical_size
+        };
+
         ui_surface.compute_layout(
             ui_root_entity,
-            computed_target.physical_size,
+            render_size,
             &mut buffer_query,
             &mut font_system,
         );
@@ -354,8 +372,8 @@ pub fn ui_layout_system(
 
                         *translation += global.translation().xy();
 
-                        let contain_size = contain.0
-                            * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
+                        let contain_size =
+                            contain.0 * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
 
                         *translation += contain_size;
 

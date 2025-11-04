@@ -1746,7 +1746,7 @@ pub fn prepare_uinodes(
 
                         let rect_size = uinode_rect.size();
 
-                        tracing::info!("uinode_rect:{:?}", uinode_rect);
+                        // tracing::info!("uinode_rect:{:?}", uinode_rect);
                         let transform = extracted_uinode.transform;
                         // tracing::info!("rect_size:{:?}", rect_size);
                         // tracing::info!("transform:{:?}", transform);
@@ -1757,7 +1757,7 @@ pub fn prepare_uinodes(
 
                         let mut points = QUAD_VERTEX_POSITIONS.map(|pos| pos * rect_size);
 
-                        tracing::info!("points:{:?}", points);
+                        // tracing::info!("points:{:?}", points);
 
                         if extracted_uinode.is_contain {
                             positions = [
