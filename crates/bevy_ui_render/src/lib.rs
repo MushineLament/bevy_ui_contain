@@ -1781,7 +1781,7 @@ pub fn prepare_uinodes(
                         // Calculate the effect of clipping
                         // Note: this won't work with rotation/scaling, but that's much more complex (may need more that 2 quads)
                         let mut positions_diff = if let Some(clip) = extracted_uinode.clip {
-                            // tracing::info!("clip:{:?}", clip);
+                            tracing::info!("clip:{:?}", clip);
                             if extracted_uinode.is_contain {
                                 [Vec2::ZERO; 4]
                             } else {
@@ -1816,10 +1816,10 @@ pub fn prepare_uinodes(
                         ];
 
                         let mut points = [
-                            points[0], //  + positions_diff[0]
-                            points[1], //  + positions_diff[1]
-                            points[2], //  + positions_diff[2]
-                            points[3], //  + positions_diff[3]
+                            points[0] + positions_diff[0],
+                            points[1] + positions_diff[1],
+                            points[2] + positions_diff[2],
+                            points[3] + positions_diff[3],
                         ];
 
                         // if extracted_uinode.is_contain {

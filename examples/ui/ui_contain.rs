@@ -11,6 +11,12 @@ fn main() {
         .run();
 }
 
+
+
+
+
+
+
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2d);
 
@@ -73,8 +79,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn((
             Node {
                 display: Display::Block,
-                width: px(300.0),
-                height: px(300.0),
+                width: px(400.0),
+                height: px(400.0),
                 border: px(4.0).all(),
                 ..Default::default()
             },
