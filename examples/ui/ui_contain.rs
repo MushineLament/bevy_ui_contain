@@ -109,9 +109,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             //         left: Srgba::WHITE.into(),
             //     },
             // ));
-            // parent.spawn(ImageNode::new(
-            //     asset_server.load("branding/bevy_bird_dark.png"),
-            // ));
+            parent.spawn(ImageNode::new(
+                asset_server.load("branding/bevy_bird_dark.png"),
+            ));
         });
 
     // commands

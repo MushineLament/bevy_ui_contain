@@ -1769,19 +1769,11 @@ pub fn prepare_uinodes(
                                 (Vec2::new(-0.5, 0.5) * rect_size + transform.translation)
                                     .extend(0.0),
                             ];
-
-                            // points = [
-                            //     (Vec2::new(-0.5, -0.5) * rect_size),
-                            //     (Vec2::new(0.5, -0.5) * rect_size),
-                            //     (Vec2::new(0.5, 0.5) * rect_size),
-                            //     (Vec2::new(-0.5, 0.5) * rect_size),
-                            // ];
                         }
 
                         // Calculate the effect of clipping
                         // Note: this won't work with rotation/scaling, but that's much more complex (may need more that 2 quads)
                         let mut positions_diff = if let Some(clip) = extracted_uinode.clip {
-                            tracing::info!("clip:{:?}", clip);
                             if extracted_uinode.is_contain {
                                 [Vec2::ZERO; 4]
                             } else {
@@ -1808,19 +1800,40 @@ pub fn prepare_uinodes(
                             [Vec2::ZERO; 4]
                         };
 
-                        let mut positions_clipped = [
-                            positions[0], // + positions_diff[0].extend(0.)
-                            positions[1], // + positions_diff[1].extend(0.)
-                            positions[2], // + positions_diff[2].extend(0.)
-                            positions[3], // + positions_diff[3].extend(0.)
+                        let positions_clipped = [
+                            positions[0] + positions_diff[0].extend(0.),
+                            positions[1] + positions_diff[1].extend(0.),
+                            positions[2] + positions_diff[2].extend(0.),
+                            positions[3] + positions_diff[3].extend(0.),
                         ];
 
-                        let mut points = [
+                        let points = [
                             points[0] + positions_diff[0],
                             points[1] + positions_diff[1],
                             points[2] + positions_diff[2],
                             points[3] + positions_diff[3],
                         ];
+
+                        let points = if extracted_uinode.is_contain {
+                            if let Some(clip) = extracted_uinode.clip {
+                                tracing::info!("clip:{:?}", clip);
+                                tracing::info!("positions_diff:{:?}", positions_diff);
+                                let offset = points[0] - Vec2::new(clip.min.x, clip.max.y);
+                                tracing::info!("1-points:{:?}", points);
+
+                                [
+                                    Vec2::new(clip.min.x, clip.min.y) + offset,
+                                    Vec2::new(clip.max.x, clip.min.y) + offset,
+                                    Vec2::new(clip.max.x, clip.max.y) + offset,
+                                    Vec2::new(clip.min.x, clip.max.y) + offset,
+                                ]
+                            } else {
+                                points
+                            }
+                        } else {
+                            points
+                        };
+                        tracing::info!("2-points:{:?}", points);
 
                         // if extracted_uinode.is_contain {
                         //     let flip = Affine2::from_scale(Vec2::new(1.0, -1.0));
