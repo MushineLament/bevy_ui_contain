@@ -1748,6 +1748,11 @@ pub fn prepare_uinodes(
 
                         let transform = extracted_uinode.transform;
                         // tracing::info!("rect_size:{:?}", rect_size);
+                        // tracing::info!(
+                        //     "main_entity:{:?},transform:{:?}",
+                        //     extracted_uinode.main_entity,
+                        //     transform
+                        // );
                         // tracing::info!("transform:{:?}", transform);
 
                         // Specify the corners of the node
@@ -1814,12 +1819,13 @@ pub fn prepare_uinodes(
                             points[3] + positions_diff[3],
                         ];
 
+                        // tracing::info!("main_entity:{:?}", extracted_uinode.main_entity);
                         let points = if extracted_uinode.is_contain {
                             if let Some(clip) = extracted_uinode.clip {
-                                tracing::info!("clip:{:?}", clip);
-                                tracing::info!("positions_diff:{:?}", positions_diff);
+                                // tracing::info!("clip:{:?}", clip);
+                                // tracing::info!("positions_diff:{:?}", positions_diff);
                                 let offset = points[0] - Vec2::new(clip.min.x, clip.max.y);
-                                tracing::info!("1-points:{:?}", points);
+                                // tracing::info!("1-points:{:?}", points);
 
                                 [
                                     Vec2::new(clip.min.x, clip.min.y) + offset,
@@ -1833,7 +1839,7 @@ pub fn prepare_uinodes(
                         } else {
                             points
                         };
-                        tracing::info!("2-points:{:?}", points);
+                        // tracing::info!("2-points:{:?}", points);
 
                         // if extracted_uinode.is_contain {
                         //     let flip = Affine2::from_scale(Vec2::new(1.0, -1.0));

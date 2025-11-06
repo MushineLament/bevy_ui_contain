@@ -298,6 +298,9 @@ pub fn ui_layout_system(
             &Anchor,
         )>,
     ) {
+        tracing::info!("-----------------start------------------");
+        tracing::info!("entity:{:?}", entity);
+        tracing::info!("inherited_transform1:{:?}", inherited_transform);
         if let Ok((
             mut node,
             transform,
@@ -310,6 +313,7 @@ pub fn ui_layout_system(
             _is_contain,
         )) = node_update_query.get_mut(entity)
         {
+            tracing::info!("此处运行1");
             let use_rounding = maybe_layout_config
                 .map(|layout_config| layout_config.use_rounding)
                 .unwrap_or(inherited_use_rounding);
@@ -317,6 +321,7 @@ pub fn ui_layout_system(
             let Ok((layout, unrounded_size)) = ui_surface.get_layout(entity, use_rounding) else {
                 return;
             };
+            tracing::info!("此处运行2");
 
             let layout_size = Vec2::new(layout.size.width, layout.size.height);
 
@@ -361,33 +366,44 @@ pub fn ui_layout_system(
             }
             inherited_transform *= local_transform;
 
-            if ui_children.get_parent(entity).is_none() {
-                if let Some(target) = _is_contain {
-                    if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
-                        let translation = &mut inherited_transform.translation;
+            // if ui_children.get_parent(entity).is_none() {
+            if let Some(target) = _is_contain {
+                if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
+                    let translation = &mut inherited_transform.translation;
 
-                        // tracing::info!("contain:{:?}", contain);
-                        // tracing::info!("layout_size:{:?}", layout_size);
+                    // tracing::info!("contain:{:?}", contain);
+                    // tracing::info!("layout_size:{:?}", layout_size);
 
-                        *translation += global.translation().xy();
+                    // *translation *= anchor.as_vec();
 
-                        let contain_size =
-                            contain.0 * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
 
-                        *translation += contain_size;
+                    *translation += global.translation().xy();
+                    tracing::info!("global.translation().xy():{:?}", global.translation().xy());
 
-                        let top_left = layout_size * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
+                    tracing::info!("anchor:{:?}", anchor);
+                    tracing::info!("main_entity:{:?},transform:{:?}", entity, translation);
+                    let contain_size = contain.0 * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
 
-                        *translation -= top_left;
+                    tracing::info!("contain_size:{:?}", contain_size);
+                    *translation += contain_size;
 
-                        *translation -= layout_size * anchor.as_vec();
-                    }
+                    let top_left = layout_size * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
+
+                    tracing::info!("top_left:{:?}", top_left);
+                    *translation -= top_left;
+
+                    *translation -= layout_size * anchor.as_vec();
+
+                    tracing::info!("main_entity:{:?},transform:{:?}", entity, translation);
                 }
             }
+            // } else {
+            // }
 
-            if inherited_transform != **global_transform {
-                *global_transform = inherited_transform.into();
-            }
+            // if inherited_transform != **global_transform {
+            *global_transform = inherited_transform.into();
+            tracing::info!("inherited_transform2:{:?}", inherited_transform);
+            // }
 
             if let Some(border_radius) = maybe_border_radius {
                 // We don't trigger change detection for changes to border radius
