@@ -361,44 +361,8 @@ pub fn ui_layout_system(
                 layout_size,
                 target_size,
             );
-            if _is_contain.is_none() {
-                local_transform.translation += local_center;
-            }
+            local_transform.translation += local_center;
             inherited_transform *= local_transform;
-
-            // if ui_children.get_parent(entity).is_none() {
-            if let Some(target) = _is_contain {
-                if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
-                    let translation = &mut inherited_transform.translation;
-
-                    // tracing::info!("contain:{:?}", contain);
-                    // tracing::info!("layout_size:{:?}", layout_size);
-
-                    // *translation *= anchor.as_vec();
-
-
-                    *translation += global.translation().xy();
-                    tracing::info!("global.translation().xy():{:?}", global.translation().xy());
-
-                    tracing::info!("anchor:{:?}", anchor);
-                    tracing::info!("main_entity:{:?},transform:{:?}", entity, translation);
-                    let contain_size = contain.0 * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
-
-                    tracing::info!("contain_size:{:?}", contain_size);
-                    *translation += contain_size;
-
-                    let top_left = layout_size * (Anchor::TOP_LEFT.as_vec() - anchor.as_vec());
-
-                    tracing::info!("top_left:{:?}", top_left);
-                    *translation -= top_left;
-
-                    *translation -= layout_size * anchor.as_vec();
-
-                    tracing::info!("main_entity:{:?},transform:{:?}", entity, translation);
-                }
-            }
-            // } else {
-            // }
 
             // if inherited_transform != **global_transform {
             *global_transform = inherited_transform.into();
