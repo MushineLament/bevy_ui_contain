@@ -11,24 +11,18 @@ fn main() {
         .run();
 }
 
-
-
-
-
-
-
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2d);
 
     commands.spawn(Sprite {
-        custom_size: Some(Vec2::new(25.0, 25.0)),
+        custom_size: Some(Vec2::new(5.0, 5.0)),
         ..Default::default()
     });
 
     let uicontain = commands
         .spawn((
             UiContainSize(Vec2::new(300.0, 300.0)),
-            Anchor::TOP_LEFT,
+            Anchor::CENTER,
             // UiContainOverflow(Overflow::clip()),
             // Transform::from_xyz(-500.0, 0.0, 0.0),
             // Sprite {
@@ -79,8 +73,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn((
             Node {
                 display: Display::Block,
-                width: px(400.0),
-                height: px(400.0),
+                width: px(300.0),
+                height: px(300.0),
                 border: px(4.0).all(),
                 ..Default::default()
             },
@@ -94,21 +88,39 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             // Button,
         ))
         .with_children(|parent| {
-            parent.spawn((
-                Node {
-                    display: Display::Block,
-                    width: px(700.0),
-                    height: px(700.0),
-                    border: px(4.0).all(),
-                    ..Default::default()
-                },
-                BorderColor {
-                    top: Srgba::BLUE.into(),
-                    right: Srgba::GREEN.into(),
-                    bottom: Srgba::RED.into(),
-                    left: Srgba::WHITE.into(),
-                },
-            ));
+            parent
+                .spawn((
+                    Node {
+                        display: Display::Block,
+                        width: px(700.0),
+                        height: px(700.0),
+                        border: px(4.0).all(),
+                        ..Default::default()
+                    },
+                    BorderColor {
+                        top: Srgba::BLUE.into(),
+                        right: Srgba::GREEN.into(),
+                        bottom: Srgba::RED.into(),
+                        left: Srgba::WHITE.into(),
+                    },
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        Node {
+                            display: Display::Block,
+                            width: px(500.0),
+                            height: px(500.0),
+                            border: px(4.0).all(),
+                            ..Default::default()
+                        },
+                        BorderColor {
+                            top: Srgba::BLUE.with_blue(0.5).into(),
+                            right: Srgba::GREEN.with_green(0.5).into(),
+                            bottom: Srgba::RED.with_red(0.5).into(),
+                            left: Srgba::WHITE.into(),
+                        },
+                    ));
+                });
             // parent.spawn(ImageNode::new(
             //     asset_server.load("branding/bevy_bird_dark.png"),
             // ));

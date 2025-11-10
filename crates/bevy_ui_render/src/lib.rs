@@ -1747,12 +1747,12 @@ pub fn prepare_uinodes(
                         let rect_size = uinode_rect.size();
 
                         let transform = extracted_uinode.transform;
-                        // tracing::info!("rect_size:{:?}", rect_size);
                         // tracing::info!(
                         //     "main_entity:{:?},transform:{:?}",
                         //     extracted_uinode.main_entity,
                         //     transform
                         // );
+                        // tracing::info!("rect_size:{:?}", rect_size);
                         // tracing::info!("transform:{:?}", transform);
 
                         // Specify the corners of the node
@@ -1779,9 +1779,9 @@ pub fn prepare_uinodes(
                         // Calculate the effect of clipping
                         // Note: this won't work with rotation/scaling, but that's much more complex (may need more that 2 quads)
                         let mut positions_diff = if let Some(clip) = extracted_uinode.clip {
-                            if extracted_uinode.is_contain {
-                                [Vec2::ZERO; 4]
-                            } else {
+                            // if extracted_uinode.is_contain {
+                            //     [Vec2::ZERO; 4]
+                            // } else {
                                 [
                                     Vec2::new(
                                         f32::max(clip.min.x - positions[0].x, 0.),
@@ -1800,7 +1800,7 @@ pub fn prepare_uinodes(
                                         f32::min(clip.max.y - positions[3].y, 0.),
                                     ),
                                 ]
-                            }
+                            // }
                         } else {
                             [Vec2::ZERO; 4]
                         };
@@ -1820,25 +1820,25 @@ pub fn prepare_uinodes(
                         ];
 
                         // tracing::info!("main_entity:{:?}", extracted_uinode.main_entity);
-                        let points = if extracted_uinode.is_contain {
-                            if let Some(clip) = extracted_uinode.clip {
-                                // tracing::info!("clip:{:?}", clip);
-                                // tracing::info!("positions_diff:{:?}", positions_diff);
-                                let offset = points[0] - Vec2::new(clip.min.x, clip.max.y);
-                                // tracing::info!("1-points:{:?}", points);
+                        // let points = if extracted_uinode.is_contain {
+                        //     if let Some(clip) = extracted_uinode.clip {
+                        //         // tracing::info!("clip:{:?}", clip);
+                        //         // tracing::info!("positions_diff:{:?}", positions_diff);
+                        //         let offset = points[0] - Vec2::new(clip.min.x, clip.max.y);
+                        //         // tracing::info!("1-points:{:?}", points);
 
-                                [
-                                    Vec2::new(clip.min.x, clip.min.y) + offset,
-                                    Vec2::new(clip.max.x, clip.min.y) + offset,
-                                    Vec2::new(clip.max.x, clip.max.y) + offset,
-                                    Vec2::new(clip.min.x, clip.max.y) + offset,
-                                ]
-                            } else {
-                                points
-                            }
-                        } else {
-                            points
-                        };
+                        //         [
+                        //             Vec2::new(clip.min.x, clip.min.y) + offset,
+                        //             Vec2::new(clip.max.x, clip.min.y) + offset,
+                        //             Vec2::new(clip.max.x, clip.max.y) + offset,
+                        //             Vec2::new(clip.min.x, clip.max.y) + offset,
+                        //         ]
+                        //     } else {
+                        //         points
+                        //     }
+                        // } else {
+                        //     points
+                        // };
                         // tracing::info!("2-points:{:?}", points);
 
                         // if extracted_uinode.is_contain {

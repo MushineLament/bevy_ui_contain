@@ -298,9 +298,6 @@ pub fn ui_layout_system(
             &Anchor,
         )>,
     ) {
-        tracing::info!("-----------------start------------------");
-        tracing::info!("entity:{:?}", entity);
-        tracing::info!("inherited_transform1:{:?}", inherited_transform);
         if let Ok((
             mut node,
             transform,
@@ -313,7 +310,6 @@ pub fn ui_layout_system(
             _is_contain,
         )) = node_update_query.get_mut(entity)
         {
-            tracing::info!("此处运行1");
             let use_rounding = maybe_layout_config
                 .map(|layout_config| layout_config.use_rounding)
                 .unwrap_or(inherited_use_rounding);
@@ -321,16 +317,22 @@ pub fn ui_layout_system(
             let Ok((layout, unrounded_size)) = ui_surface.get_layout(entity, use_rounding) else {
                 return;
             };
-            tracing::info!("此处运行2");
 
             let layout_size = Vec2::new(layout.size.width, layout.size.height);
+            tracing::info!("layout_size:{:?}", layout_size);
 
             // Taffy layout position of the top-left corner of the node, relative to its parent.
             let layout_location = Vec2::new(layout.location.x, layout.location.y);
+            tracing::info!("layout_location:{:?}", layout_location);
 
             // The position of the center of the node relative to its top-left corner.
             let local_center =
                 layout_location - parent_scroll_position + 0.5 * (layout_size - parent_size);
+
+            tracing::info!("parent_size:{:?}", parent_size);
+            tracing::info!("parent_scroll_position:{:?}", parent_scroll_position);
+            tracing::info!("layout_location:{:?}", layout_location);
+            tracing::info!("local_center:{:?}", local_center);
 
             // only trigger change detection when the new values are different
             if node.size != layout_size
@@ -361,8 +363,29 @@ pub fn ui_layout_system(
                 layout_size,
                 target_size,
             );
-            local_transform.translation += local_center;
-            inherited_transform *= local_transform;
+
+            if let Some(target) = _is_contain {
+                // 判断是否是root node
+                let flip_y = Affine2::from_scale(Vec2::new(1.0, -1.0));
+                if ui_children.get_parent(entity).is_none() {
+                    if let Ok((global, contain, anchor)) = contain_query.get(target.0) {
+                        local_transform.translation += global.translation().xy();
+                        
+                        // 中心修正
+                        let offset = flip_y.transform_vector2(contain.0);
+                        local_transform.translation -= offset / 2.0;
+                        
+                        // anchor 偏移
+                        let offset_anchor = anchor.as_vec() * contain.0;
+                        local_transform.translation -= offset_anchor;
+                    }
+                }
+                local_transform.translation += flip_y.transform_vector2(local_center);
+                inherited_transform *= local_transform;
+            } else {
+                local_transform.translation += local_center;
+                inherited_transform *= local_transform;
+            }
 
             // if inherited_transform != **global_transform {
             *global_transform = inherited_transform.into();
